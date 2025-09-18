@@ -12,6 +12,7 @@ from datetime import datetime
 from pathlib import Path
 import keyboard
 import argparse
+import pygame
 
 class GamePanoCapture:
     def __init__(self, config_file="game_config.json"):
@@ -19,6 +20,8 @@ class GamePanoCapture:
         self.config = self.load_config()
         self.screenshot_count = 0
         self.output_dir = None
+        self.gamepad = None
+        self.gamepad_initialized = False
 
     def load_config(self):
         """Load or create configuration file"""
@@ -33,8 +36,8 @@ class GamePanoCapture:
                         "down": "down"
                     },
                     "gamepad": {
-                        "right_stick_x": "right_stick_x",
-                        "right_stick_y": "right_stick_y"
+                        "stick_movement_amount": 0.8,  # Amount to move stick (0.0 to 1.0)
+                        "gamepad_index": 0  # Which gamepad to use (0 for first gamepad)
                     },
                     "screenshot_key": "f9",  # Key combination for taking screenshots
                     "movement_duration": 0.1,  # Duration to hold key/stick
@@ -68,6 +71,42 @@ class GamePanoCapture:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         print(f"Session info will be saved to: {self.output_dir}")
 
+    def init_gamepad(self, game_config):
+        """Initialize gamepad if needed"""
+        if game_config["control_type"] != "gamepad":
+            return True
+            
+        if self.gamepad_initialized:
+            return True
+            
+        try:
+            pygame.init()
+            pygame.joystick.init()
+            
+            # Check if any joysticks are connected
+            joystick_count = pygame.joystick.get_count()
+            if joystick_count == 0:
+                print("Error: No gamepad found. Please connect a gamepad and try again.")
+                return False
+                
+            # Get the gamepad index from config
+            gamepad_index = game_config.get("gamepad", {}).get("gamepad_index", 0)
+            if gamepad_index >= joystick_count:
+                print(f"Error: Gamepad index {gamepad_index} not found. Available gamepads: {joystick_count}")
+                return False
+                
+            # Initialize the gamepad
+            self.gamepad = pygame.joystick.Joystick(gamepad_index)
+            self.gamepad.init()
+            
+            print(f"Gamepad initialized: {self.gamepad.get_name()}")
+            self.gamepad_initialized = True
+            return True
+            
+        except Exception as e:
+            print(f"Error initializing gamepad: {e}")
+            return False
+
     def take_screenshot(self, screenshot_number, game_config):
         """Trigger screenshot using configured keybind"""
         try:
@@ -96,10 +135,55 @@ class GamePanoCapture:
             time.sleep(game_config["movement_duration"])
             keyboard.release(key)
         elif game_config["control_type"] == "gamepad":
-            # For gamepad control, you'd need to integrate with a gamepad library
-            # like pygame or inputs. This is a placeholder for the concept.
-            print(f"Gamepad movement: {direction}")
-            # Implementation would depend on specific gamepad library
+            if not self.init_gamepad(game_config):
+                print("Error: Could not initialize gamepad")
+                return
+                
+            # Get movement amount from config
+            stick_amount = game_config.get("gamepad", {}).get("stick_movement_amount", 0.8)
+            movement_duration = game_config["movement_duration"]
+            
+            # Map directions to right stick movements
+            if direction == "right":
+                x_axis = stick_amount
+                y_axis = 0.0
+            elif direction == "left":
+                x_axis = -stick_amount
+                y_axis = 0.0
+            elif direction == "up":
+                x_axis = 0.0
+                y_axis = -stick_amount  # Negative Y is up on most game right sticks
+            elif direction == "down":
+                x_axis = 0.0
+                y_axis = stick_amount   # Positive Y is down on most game right sticks
+            else:
+                print(f"Unknown direction: {direction}")
+                return
+            
+            # Simulate right stick movement by sending events
+            try:
+                print(f"Moving gamepad right stick: {direction} (x={x_axis:.1f}, y={y_axis:.1f})")
+                
+                # Create joystick motion events
+                x_event = pygame.event.Event(pygame.JOYAXISMOTION, joy=self.gamepad.get_instance_id(), axis=2, value=x_axis)
+                y_event = pygame.event.Event(pygame.JOYAXISMOTION, joy=self.gamepad.get_instance_id(), axis=3, value=y_axis)
+                
+                # Post the events
+                pygame.event.post(x_event)
+                pygame.event.post(y_event)
+                
+                # Hold the movement for the specified duration
+                time.sleep(movement_duration)
+                
+                # Release the stick (return to center)
+                x_release = pygame.event.Event(pygame.JOYAXISMOTION, joy=self.gamepad.get_instance_id(), axis=2, value=0.0)
+                y_release = pygame.event.Event(pygame.JOYAXISMOTION, joy=self.gamepad.get_instance_id(), axis=3, value=0.0)
+                
+                pygame.event.post(x_release)
+                pygame.event.post(y_release)
+                
+            except Exception as e:
+                print(f"Error moving gamepad stick: {e}")
 
         time.sleep(game_config["pause_between_moves"])
 
@@ -110,6 +194,12 @@ class GamePanoCapture:
             game_name = "default"
 
         game_config = self.config["games"][game_name]
+
+        # Initialize gamepad if needed
+        if game_config["control_type"] == "gamepad":
+            if not self.init_gamepad(game_config):
+                print("Failed to initialize gamepad. Aborting capture.")
+                return
 
         print(f"\n=== 360° Panorama Capture Started ===")
         print(f"Game: {game_name}")
@@ -214,11 +304,14 @@ class GamePanoCapture:
                 "down": input("Down key [down]: ") or "down"
             }
         else:
+            stick_movement = input("Stick movement amount (0.1-1.0) [0.8]: ") or "0.8"
+            gamepad_index = input("Gamepad index (0 for first gamepad) [0]: ") or "0"
+            
             config["gamepad"] = {
-                "right_stick_x": "right_stick_x",
-                "right_stick_y": "right_stick_y"
+                "stick_movement_amount": float(stick_movement),
+                "gamepad_index": int(gamepad_index)
             }
-            print("Note: Gamepad support requires additional implementation with pygame or inputs library.")
+            print("Gamepad support is now fully implemented using pygame!")
 
         # Save configuration
         self.config["games"][game_name] = config

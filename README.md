@@ -65,7 +65,7 @@ Game 360° Panorama Capture is an automation tool that captures spherical panora
 ### Features
 
 - **Game-specific configurations**: Each game can have unique camera movement and timing settings
-- **Flexible control support**: Works with keyboard controls or gamepad (with additional setup)
+- **Flexible control support**: Works with keyboard controls or gamepad (Xbox controller/similar)
 - **Custom screenshot integration**: Uses your preferred screenshot tool via configurable keybinds
 - **Spherical capture pattern**: Follows proper panoramic photography patterns from nadir to zenith
 - **Resume capability**: Can be interrupted and provides partial capture information
@@ -93,10 +93,14 @@ You'll be prompted to configure:
 Before doing a full capture, test your settings:
 
 ```bash
-python3 pano_capture.py --test "Cyberpunk 2077"
+# Test horizontal rotation (360° test)
+python3 pano_capture.py --test-horizontal "Cyberpunk 2077"
+
+# Test vertical movement (nadir to zenith)
+python3 pano_capture.py --test-vertical "Cyberpunk 2077"
 ```
 
-Use commands like `left`, `right`, `up`, `down`, `screenshot` to verify everything works correctly.
+These tests will verify camera movement works correctly before doing a full capture.
 
 #### 3. Capture a Panorama
 
@@ -176,6 +180,37 @@ The script supports various key formats:
 - Letter keys: `w`, `a`, `s`, `d`
 - Key combinations: `ctrl+shift+s`, `alt+f12`
 
+#### Gamepad Configuration
+
+For gamepad control, connect an Xbox controller or compatible gamepad before setup:
+
+```json
+{
+  "games": {
+    "Cyberpunk 2077 (Gamepad)": {
+      "control_type": "gamepad",
+      "screenshot_key": "f9",
+      "gamepad": {
+        "stick_movement_amount": 0.8,
+        "gamepad_index": 0
+      },
+      "movement_duration": 0.1,
+      "pause_between_moves": 0.3,
+      "screenshot_delay": 0.5,
+      "screenshot_pause": 0.8,
+      "horizontal_steps": 36,
+      "vertical_steps": 18
+    }
+  }
+}
+```
+
+**Gamepad Settings:**
+- `stick_movement_amount`: How far to move the right stick (0.1-1.0)
+- `gamepad_index`: Which gamepad to use (0 for first gamepad)
+- Uses the right analog stick for camera movement
+- Automatically detects connected gamepads via pygame
+
 #### Screenshot Tool Integration
 
 Popular screenshot tools and their typical keybinds:
@@ -193,8 +228,11 @@ python3 pano_capture.py --setup "Game Name"
 # Capture panorama for configured game
 python3 pano_capture.py --capture "Game Name"
 
-# Test movement and screenshot for game
-python3 pano_capture.py --test "Game Name"
+# Test horizontal rotation (360° test)
+python3 pano_capture.py --test-horizontal "Game Name"
+
+# Test vertical movement (nadir to zenith)
+python3 pano_capture.py --test-vertical "Game Name"
 
 # List all configured games
 python3 pano_capture.py --list
@@ -212,8 +250,11 @@ python3 pano_capture.py --setup "My Favorite Game"
 
 ### 2. **Test Configuration**
 ```bash
-# Verify movement and screenshots work
-python3 pano_capture.py --test "My Favorite Game"
+# Test horizontal rotation (360° test)
+python3 pano_capture.py --test-horizontal "My Favorite Game"
+
+# Test vertical movement (nadir to zenith)
+python3 pano_capture.py --test-vertical "My Favorite Game"
 ```
 
 ### 3. **Prepare Game Environment**
@@ -268,11 +309,23 @@ Different games may require unique approaches:
 - **Flight simulators**: Often have complex camera systems requiring custom configuration
 - **Racing games**: Photo modes may have different control schemes
 
+### Troubleshooting Gamepad Issues
+
+**Gamepad not detected:**
+- Ensure your Xbox controller or compatible gamepad is connected
+- Check that the gamepad is recognized by your system
+- Try disconnecting and reconnecting the gamepad
+- Verify pygame can detect it: `python3 -c "import pygame; pygame.init(); pygame.joystick.init(); print(f'Gamepads: {pygame.joystick.get_count()}')"`
+
+**Camera movement too sensitive/not sensitive enough:**
+- Adjust `stick_movement_amount` in your game configuration (0.1-1.0)
+- Modify `movement_duration` for longer/shorter stick movements
+- Some games may need different sensitivity settings
+
 ### Future Enhancements
 
 Planned features for future versions:
-- Gamepad support with Xbox controller integration
-- GUI interface for easier configuration
 - Automatic panorama stitching integration
 - HDR capture support for compatible games
 - Batch processing for multiple locations
+- Support for different gamepad types beyond Xbox controllers
