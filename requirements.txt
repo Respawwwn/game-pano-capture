@@ -1,0 +1,16 @@
+# 360° Game Screenshot Automation - Required Dependencies
+
+# Keyboard input simulation and monitoring
+keyboard>=0.13.0
+
+# Standard library modules (included with Python):
+# - time
+# - os
+# - json
+# - datetime
+# - pathlib
+# - argparse
+
+# Optional dependencies for future gamepad support:
+# pygame>=2.5.0  # Uncomment if adding gamepad support
+# inputs>=0.5    # Alternative gamepad library
