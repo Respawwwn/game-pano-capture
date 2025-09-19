@@ -137,10 +137,10 @@ class GamePanoCapture:
                 y_axis = 0.0
             elif direction == "up":
                 x_axis = 0.0
-                y_axis = -stick_amount  # Negative Y is up on most game right sticks
+                y_axis = stick_amount  # Positive Y is up on most game right sticks.
             elif direction == "down":
                 x_axis = 0.0
-                y_axis = stick_amount   # Positive Y is down on most game right sticks
+                y_axis = -stick_amount   # Negative Y is down on most game right sticks.
             else:
                 print(f"Unknown direction: {direction}")
                 return
@@ -355,12 +355,12 @@ class GamePanoCapture:
         try:
             for step in range(game_config["vertical_steps"]):
                 print(f"Step {step + 1}/{game_config['vertical_steps']}")
-                self.move_camera("up", game_config)
+                self.move_camera("down", game_config)
 
             print(f"\n=== Vertical Test Complete ===")
-            print("Did the camera reach exactly zenith (straight up)?")
-            print("- If it went too far past zenith: DECREASE 'vertical_steps'")
-            print("- If it didn't reach zenith: INCREASE 'vertical_steps'")
+            print("Did the camera reach exactly nadir (straight bottom)?")
+            print("- If it went too far past nadir: DECREASE 'vertical_steps'")
+            print("- If it didn't reach nadir: INCREASE 'vertical_steps'")
             print("- If movement was too fast/slow: adjust 'movement_duration' and 'pause_between_moves'")
 
         except KeyboardInterrupt:
