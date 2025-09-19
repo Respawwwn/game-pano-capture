@@ -6,6 +6,9 @@ keyboard>=0.13.0
 # Gamepad support for camera control
 pygame>=2.5.0
 
+# Windows virtual gamepad simulation
+vgamepad>=0.0.8
+
 # Standard library modules (included with Python):
 # - time
 # - os

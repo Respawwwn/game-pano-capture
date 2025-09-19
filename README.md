@@ -19,7 +19,6 @@ game-360-panorama-capture/
 - Python 3.7 or higher
 - A screenshot/region capture tool (e.g., ShareX, Greenshot, etc.)
 - Video games with photo mode capability
-- Xbox controller (optional, for gamepad control)
 
 ### Install Python
 
@@ -182,8 +181,6 @@ The script supports various key formats:
 
 #### Gamepad Configuration
 
-For gamepad control, connect an Xbox controller or compatible gamepad before setup:
-
 ```json
 {
   "games": {
@@ -207,9 +204,7 @@ For gamepad control, connect an Xbox controller or compatible gamepad before set
 
 **Gamepad Settings:**
 - `stick_movement_amount`: How far to move the right stick (0.1-1.0)
-- `gamepad_index`: Which gamepad to use (0 for first gamepad)
 - Uses the right analog stick for camera movement
-- Automatically detects connected gamepads via pygame
 
 #### Screenshot Tool Integration
 
@@ -260,9 +255,9 @@ python3 pano_capture.py --test-vertical "My Favorite Game"
 ### 3. **Prepare Game Environment**
 - Launch your game
 - Navigate to the desired location
+- Setup your capture region in your screenshot tool
 - Enter photo mode
-- Position camera at nadir (straight down)
-- Ensure screenshot tool is active
+- Position camera at zenith (straight up)
 
 ### 4. **Capture Session**
 ```bash
@@ -279,9 +274,8 @@ python3 pano_capture.py --capture "My Favorite Game"
 ### Tips for Best Results
 
 #### Camera Positioning
-- Always start at nadir (straight down) for consistent results
+- Always start at zenith (straight up) for consistent results
 - Ensure the game's camera center point is stable
-- Test different locations to find optimal capture spots
 
 #### Movement Calibration
 - Fine-tune `horizontal_steps` to ensure complete coverage without gaps
@@ -301,31 +295,19 @@ python3 pano_capture.py --capture "My Favorite Game"
 - **Game loses focus**: Ensure game window stays active during capture
 - **Inconsistent movement**: Some games may need longer delays or different key mappings
 
-### Game-Specific Notes
+### Windows Virtual Gamepad Support
 
-Different games may require unique approaches:
-- **First-person games**: Usually work well with standard keyboard controls
-- **Third-person games**: May need specific camera modes or different key bindings
-- **Flight simulators**: Often have complex camera systems requiring custom configuration
-- **Racing games**: Photo modes may have different control schemes
+For gamepad control on Windows, the script uses `vgamepad` to create a virtual Xbox 360 controller:
 
-### Troubleshooting Gamepad Issues
+```bash
+pip install vgamepad
+```
 
-**Gamepad not detected:**
-- Ensure your Xbox controller or compatible gamepad is connected
-- Check that the gamepad is recognized by your system
-- Try disconnecting and reconnecting the gamepad
-- Verify pygame can detect it: `python3 -c "import pygame; pygame.init(); pygame.joystick.init(); print(f'Gamepads: {pygame.joystick.get_count()}')"`
-
-**Camera movement too sensitive/not sensitive enough:**
-- Adjust `stick_movement_amount` in your game configuration (0.1-1.0)
-- Modify `movement_duration` for longer/shorter stick movements
-- Some games may need different sensitivity settings
+**Note**: Virtual gamepad functionality is Windows-only. On other platforms, use keyboard control.
 
 ### Future Enhancements
 
 Planned features for future versions:
 - Automatic panorama stitching integration
 - HDR capture support for compatible games
-- Batch processing for multiple locations
-- Support for different gamepad types beyond Xbox controllers
+- Cross-platform gamepad support
