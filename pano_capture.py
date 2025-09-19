@@ -97,12 +97,13 @@ class GamePanoCapture:
             screenshot_key = game_config.get("screenshot_key", "f9")
             print(f"Taking screenshot {screenshot_number:04d} (pressing {screenshot_key})...")
 
-            # Handle key combinations (e.g., "ctrl+shift+f9")
+            # Handle key combinations (e.g., "ctrl+shift+f9", "alt+1")
             if "+" in screenshot_key:
                 keys = screenshot_key.split("+")
-                keyboard.send("+".join(keys))
+                # Use keyboard.press_and_release for better Windows compatibility
+                keyboard.press_and_release(screenshot_key)
             else:
-                keyboard.send(screenshot_key)
+                keyboard.press_and_release(screenshot_key)
 
             # Wait for screenshot to be processed by external tool
             time.sleep(game_config.get("screenshot_pause", 0.8))
