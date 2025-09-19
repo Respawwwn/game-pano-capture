@@ -295,7 +295,7 @@ python3 pano_capture.py --capture "My Favorite Game"
 - **Game loses focus**: Ensure game window stays active during capture
 - **Inconsistent movement**: Some games may need longer delays or different key mappings
 
-### Windows Virtual Gamepad Support
+### Gamepad Support
 
 For gamepad control on Windows, the script uses `vgamepad` to create a virtual Xbox 360 controller:
 
@@ -305,9 +305,35 @@ pip install vgamepad
 
 **Note**: Virtual gamepad functionality is Windows-only. On other platforms, use keyboard control.
 
+### Screenshot Not Working When Game Has Focus
+
+**Problem**: Screenshot hotkey works outside the game but fails when the game window is focused.
+
+**Cause**: Fullscreen games often have higher priority and intercept keyboard input, preventing automation scripts from sending keystrokes.
+
+**Solutions**:
+
+1. **Run game in Windowed/Borderless mode** (Recommended)
+   - Switch from fullscreen to windowed or borderless windowed mode
+   - This allows external applications to send keyboard input
+
+2. **Run Python script with elevated privileges**
+   ```bash
+   # Windows (run Command Prompt as Administrator)
+   python pano_capture.py --test-screenshot "Your Game"
+   
+   # Linux/macOS
+   sudo python3 pano_capture.py --test-screenshot "Your Game"
+   ```
+
+3. **Test with --test-screenshot first**
+   ```bash
+   python pano_capture.py --test-screenshot "Your Game"
+   ```
+   If it works outside the game but not inside, use solutions 1 or 2 above.
+
 ### Future Enhancements
 
 Planned features for future versions:
 - Automatic panorama stitching integration
 - HDR capture support for compatible games
-- Cross-platform gamepad support
