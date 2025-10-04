@@ -7,7 +7,7 @@ keyboard>=0.13.0
 pygame>=2.5.0
 
 # Windows virtual gamepad simulation
-vgamepad>=0.0.8
+vgamepad>=0.0.8; sys_platform == "win32"
 
 # Windows mouse control (Windows only)
 pywin32>=306; sys_platform == "win32"

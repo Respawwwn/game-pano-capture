@@ -1,18 +1,19 @@
 # Game 360° Panorama Capture Automation
 
-## Repository Structure
+Game 360° Panorama Capture is an automation tool that captures spherical panoramic screenshots from video games with photo modes.
+It systematically moves the camera in a spherical pattern and triggers your screenshot tool to capture images suitable for creating equirectangular panoramas.
 
-```
-game-360-panorama-capture/
-├── pano_capture.py           # Main automation script
-├── requirements.txt               # Required Python packages
-├── game_config.json               # Game-specific configurations
-├── captures/                      # Capture sessions are stored here
-│   └── panorama_capture_[game]_[timestamp]/
-│       ├── session_info.json     # Capture session metadata
-│       └── (screenshots saved by your capture tool)
-└── README.md                      # This documentation file
-```
+> This tool captures individual screenshots - you must use panorama stitching software to create the final equirectangular panorama.
+
+## Features
+
+- **Game-specific configurations**: Each game can have unique camera movement and timing settings
+- **Multiple control support**: Works with keyboard, gamepad (Xbox controller), or mouse controls
+- **Custom screenshot integration**: Uses your preferred screenshot tool via configurable keybinds
+- **Spherical capture pattern**: Follows proper panoramic photography patterns from zenith to nadir
+- **Resume capability**: Can be interrupted and provides partial capture information
+- **Movement testing**: Test camera movement and screenshot triggers before full capture
+- **Separate horizontal/vertical timing**: Independent movement durations for precise control
 
 ## Prerequisites
 
@@ -37,25 +38,22 @@ pip install -r requirements.txt
 ```
 
 ```bash
-# Setup a game
+# Setup a game.
 python pano_capture.py --setup "Cyberpunk 2077"
-```
-
-```bash
-# Capture a panorama
+# Capture a panorama.
 python pano_capture.py --capture "Cyberpunk 2077"
 ```
 
 Before doing a full capture, test your settings:
 
 ```bash
-# Test horizontal rotation (360° test)
+# Test horizontal rotation (360° test).
 python pano_capture.py --test-horizontal "Cyberpunk 2077"
 
-# Test vertical movement (nadir to zenith)
+# Test vertical movement (nadir to zenith).
 python pano_capture.py --test-vertical "Cyberpunk 2077"
 
-# Test screenshot keybind
+# Test screenshot keybind.
 python pano_capture.py --test-screenshot "Cyberpunk 2077"
 ```
 
@@ -77,22 +75,9 @@ Verify the installation:
 python --version
 ```
 
-## Overview
+## Usage
 
-Game 360° Panorama Capture is an automation tool that captures spherical panoramic screenshots from video games with photo modes. It systematically moves the camera in a spherical pattern and triggers your screenshot tool to capture images suitable for creating equirectangular panoramas.
-
-### Features
-
-- **Game-specific configurations**: Each game can have unique camera movement and timing settings
-- **Flexible control support**: Works with keyboard controls or gamepad (Xbox controller/similar)
-- **Custom screenshot integration**: Uses your preferred screenshot tool via configurable keybinds
-- **Spherical capture pattern**: Follows proper panoramic photography patterns from nadir to zenith
-- **Resume capability**: Can be interrupted and provides partial capture information
-- **Movement testing**: Test camera movement and screenshot triggers before full capture
-
-### Usage
-
-#### 1. Initial Setup for a New Game
+### 1. Initial Setup for a New Game
 
 Configure a new game with its specific settings:
 
@@ -101,13 +86,19 @@ python pano_capture.py --setup "Cyberpunk 2077"
 ```
 
 You'll be prompted to configure:
-- Control type (keyboard/gamepad)
-- Camera movement keys
-- Screenshot keybind for your capture tool
-- Movement timing and delays
-- Spherical capture parameters (horizontal/vertical steps)
+- Control type (keyboard/gamepad/mouse)
+- Screenshot settings (keybind, delay, pause)
+- Movement settings (steps, duration, pause)
+- Control-specific settings (keys, gamepad sensitivity, mouse sensitivity)
 
-#### 2. Test Configuration
+### 2. **Prepare Game Environment**
+- Launch your game
+- Navigate to the desired location
+- Setup your capture region in your screenshot tool
+- Enter photo mode
+- Position camera at zenith (straight up)
+
+### 3. Test Configuration
 
 Before doing a full capture, test your settings:
 
@@ -124,69 +115,71 @@ python pano_capture.py --test-screenshot "Cyberpunk 2077"
 
 These tests will verify camera movement works correctly before doing a full capture.
 
-#### 3. Capture a Panorama
+### 3. Capture a Panorama
 
 Once configured and tested:
 
 ```bash
+# Start automated capture
 python pano_capture.py --capture "Cyberpunk 2077"
 ```
 
-### Capture Workflow
+### 4. **Create Panorama**
+- Locate screenshots in your capture tool's output folder
+- Import images into panorama software (e.g., Autogiga Pano)
+- Process into equirectangular format
+- View your 360° panorama!
 
-1. **Prepare the game**:
-    - Open your game and navigate to desired location
-    - Enter photo mode
-    - Position camera at nadir (looking straight down)
-    - Ensure your screenshot tool is ready
+## Configuration Parameters
 
-2. **Start capture**:
-    - Run the capture command
-    - Focus the game window during the 5-second countdown
-    - Let the script automatically handle camera movement and screenshots
+### Movement Settings
+- `movement.horizontal_steps`: Number of steps for complete horizontal rotation
+- `movement.vertical_steps`: Number of steps from zenith to nadir
+- `movement.horizontal_movement_duration`: How long to hold horizontal movement (seconds)
+- `movement.vertical_movement_duration`: How long to hold vertical movement (seconds)
+- `movement.pause_between_moves`: Delay between camera movements (seconds)
 
-3. **Process results**:
-    - Screenshots are saved by your capture tool
-    - Session information is saved in the captures directory
-    - Use software like Autogiga Pano to create equirectangular panorama
+### Screenshot Settings
+- `screenshot.key`: Key combination for your screenshot tool
+- `screenshot.delay`: Wait time before taking screenshot (seconds)
+- `screenshot.pause`: Wait time after taking screenshot (seconds)
 
-### Configuration Parameters
+### Control Settings
+- `control_type`: "keyboard", "gamepad", or "mouse"
+- `controls.keyboard`: Mapping of directions to keyboard keys
+- `controls.gamepad.stick_movement_amount`: Gamepad sensitivity (0.1-1.0)
+- `controls.mouse.sensitivity`: Mouse movement pixels (10-500)
+- `controls.mouse.capture_mouse`: Whether to capture mouse during operation
 
-#### Movement Settings
-- `movement_duration`: How long to hold movement keys (seconds)
-- `pause_between_moves`: Delay between camera movements (seconds)
-- `screenshot_delay`: Wait time before taking screenshot (seconds)
-- `screenshot_pause`: Wait time after taking screenshot (seconds)
+### Example Configurations
 
-#### Capture Pattern
-- `horizontal_steps`: Number of steps for complete horizontal rotation (your "magic number")
-- `vertical_steps`: Number of steps from nadir to zenith
-
-#### Controls
-- `control_type`: "keyboard" or "gamepad"
-- `keys`: Mapping of directions to keyboard keys
-- `screenshot_key`: Key combination for your screenshot tool
-
-### Example Configuration
-
+#### Keyboard Control
 ```json
 {
   "games": {
     "Cyberpunk 2077": {
+      "description": "Cyberpunk 2077 with keyboard controls",
       "control_type": "keyboard",
-      "screenshot_key": "f9",
-      "keys": {
-        "left": "left",
-        "right": "right",
-        "up": "up",
-        "down": "down"
+      "movement": {
+        "horizontal_steps": 36,
+        "vertical_steps": 18,
+        "horizontal_movement_duration": 0.1,
+        "vertical_movement_duration": 0.1,
+        "pause_between_moves": 0.3
       },
-      "movement_duration": 0.1,
-      "pause_between_moves": 0.3,
-      "screenshot_delay": 0.5,
-      "screenshot_pause": 0.8,
-      "horizontal_steps": 36,
-      "vertical_steps": 18
+      "screenshot": {
+        "key": "f9",
+        "delay": 0.5,
+        "pause": 0.8
+      },
+      "controls": {
+        "keyboard": {
+          "left": "left",
+          "right": "right",
+          "up": "up",
+          "down": "down"
+        }
+      }
     }
   }
 }
@@ -208,33 +201,65 @@ The script supports various key formats:
 {
   "games": {
     "Cyberpunk 2077 (Gamepad)": {
+      "description": "Cyberpunk 2077 with gamepad controls",
       "control_type": "gamepad",
-      "screenshot_key": "f9",
-      "gamepad": {
-        "stick_movement_amount": 0.8
+      "movement": {
+        "horizontal_steps": 36,
+        "vertical_steps": 18,
+        "horizontal_movement_duration": 0.1,
+        "vertical_movement_duration": 0.1,
+        "pause_between_moves": 0.3
       },
-      "movement_duration": 0.1,
-      "pause_between_moves": 0.3,
-      "screenshot_delay": 0.5,
-      "screenshot_pause": 0.8,
-      "horizontal_steps": 36,
-      "vertical_steps": 18
+      "screenshot": {
+        "key": "f9",
+        "delay": 0.5,
+        "pause": 0.8
+      },
+      "controls": {
+        "gamepad": {
+          "stick_movement_amount": 0.8
+        }
+      }
     }
   }
 }
 ```
 
-**Gamepad Settings:**
-- `stick_movement_amount`: How far to move the right stick (0.1-1.0)
-- It Uses the right analog stick for camera movement
+#### Mouse Configuration
 
-### Screenshot Tool Integration
+```json
+{
+  "games": {
+    "Cyberpunk 2077 (Mouse)": {
+      "description": "Cyberpunk 2077 with mouse controls",
+      "control_type": "mouse",
+      "movement": {
+        "horizontal_steps": 36,
+        "vertical_steps": 18,
+        "horizontal_movement_duration": 0.1,
+        "vertical_movement_duration": 0.1,
+        "pause_between_moves": 0.3
+      },
+      "screenshot": {
+        "key": "f9",
+        "delay": 0.5,
+        "pause": 0.8
+      },
+      "controls": {
+        "mouse": {
+          "sensitivity": 200,
+          "capture_mouse": false
+        }
+      }
+    }
+  }
+}
+```
 
-Popular screenshot tools and their typical keybinds:
-- **ShareX**: `ctrl+shift+4` (region capture)
-- **Greenshot**: `printscreen` or custom hotkey
-- **Windows Snipping Tool**: `win+shift+s`
-- **macOS Screenshot**: `cmd+shift+4`
+**Control Settings:**
+- **Gamepad**: `stick_movement_amount` controls how far to move the right stick (0.1-1.0)
+- **Mouse**: `sensitivity` controls mouse movement distance in pixels (10-500)
+- **Mouse**: `capture_mouse` whether to capture mouse during operation (Windows only)
 
 ## Command Reference
 
@@ -258,70 +283,40 @@ python pano_capture.py --test-screenshot "Game Name"
 python pano_capture.py --list
 ```
 
-## Complete Workflow
+## Tips for Best Results
 
-Follow these steps to create a 360° panorama from a video game:
-
-### 1. **Initial Setup**
-```bash
-# Configure your game
-python pano_capture.py --setup "My Favorite Game"
-```
-
-### 2. **Prepare Game Environment**
-- Launch your game
-- Navigate to the desired location
-- Setup your capture region in your screenshot tool
-- Enter photo mode
-- Position camera at zenith (straight up)
-
-### 3. **Capture Session**
-```bash
-# Start automated capture
-python pano_capture.py --capture "My Favorite Game"
-```
-
-### 5. **Create Panorama**
-- Locate screenshots in your capture tool's output folder
-- Import images into panorama software (e.g., Autogiga Pano)
-- Process into equirectangular format
-- View your 360° panorama!
-
-### Tips for Best Results
-
-#### Camera Positioning
+### Camera Positioning
 - Always start at zenith (straight up) for consistent results
 - Ensure the game's camera center point is stable
 
-#### Movement Calibration
+### Movement Calibration
 - Fine-tune `horizontal_steps` to ensure complete coverage without gaps
 - Adjust `vertical_steps` based on the game's vertical field of view
 - Use test mode to verify smooth camera movement
 
-#### Screenshot Quality
+### Screenshot Quality
 - Configure your screenshot tool for highest quality
 - Ensure consistent region capture (same area every time)
 - Avoid UI elements in the capture area
 
-### Troubleshooting
+## Troubleshooting
 
 - **Camera moves too fast/slow**: Adjust `movement_duration` and `pause_between_moves`
+- **Motion blur in screenshots**: Increase `screenshot.delay` to allow camera stabilization
+- **Unloaded game textures**: Pause longer before taking a screenshot `screenshot.pause`
 - **Screenshots not capturing**: Verify `screenshot_key` matches your tool's hotkey
-- **Missing coverage areas**: Increase `horizontal_steps` or `vertical_steps`
-- **Game loses focus**: Ensure game window stays active during capture
+- **Missing coverage areas**: Increase `horizontal_steps` or `vertical_steps` to have overlapping shots
 - **Inconsistent movement**: Some games may need longer delays or different key mappings
 
-#### Troubleshooting
+### Mouse Support
+
+For mouse control on Windows, the script uses `pywin32` for optimal mouse movement:
+**Note**: On Windows, `pywin32` is automatically installed via `requirements.txt` for better mouse control.
 
 ### Gamepad Support
 
 For gamepad control on Windows, the script uses `vgamepad` to create a virtual Xbox 360 controller:
-
-```bash
-pip install vgamepad
-```
-
-**Note**: Virtual gamepad functionality is Windows-only. On other platforms, use keyboard control.
+**Note**: Virtual gamepad functionality is Windows-only. On other platforms, use keyboard or mouse control.
 
 ### Screenshot Not Working When Game Has Focus
 
@@ -350,9 +345,16 @@ pip install vgamepad
    ```
    If it works outside the game but not inside, use solutions 1 or 2 above.
 
-### Future Enhancements
+## Repository Structure
 
-Planned features for future versions:
-- Automatic panorama stitching integration
-- HDR capture support for compatible games
-- Independent configurable movement speed for horizontal and vertical axes
+```
+game-360-panorama-capture/
+├── pano_capture.py           # Main automation script
+├── requirements.txt               # Required Python packages
+├── game_config.json               # Game-specific configurations
+├── captures/                      # Capture sessions are stored here
+│   └── panorama_capture_[game]_[timestamp]/
+│       ├── session_info.json     # Capture session metadata
+│       └── (screenshots saved by your capture tool)
+└── README.md                      # This documentation file
+```
