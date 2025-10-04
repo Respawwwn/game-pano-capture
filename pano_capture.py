@@ -8,6 +8,7 @@ Uses configurable keybinds to trigger external screenshot tools.
 import time
 import os
 import json
+import platform
 from datetime import datetime
 from pathlib import Path
 import keyboard
@@ -24,13 +25,15 @@ class GamePanoCapture:
         self.gamepad = None
         self.gamepad_initialized = False
         self.virtual_gamepad = None
+        self.pygame_initialized = False
+        self.mouse_initialized = False
 
     def load_config(self):
         """Load or create configuration file"""
         default_config = {
             "games": {
                 "default": {
-                    "control_type": "keyboard",  # "keyboard" or "gamepad"
+                    "control_type": "keyboard",  # "keyboard", "gamepad", or "mouse"
                     "keys": {
                         "left": "left",
                         "right": "right",
@@ -39,6 +42,10 @@ class GamePanoCapture:
                     },
                     "gamepad": {
                         "stick_movement_amount": 0.8  # Amount to move stick (0.0 to 1.0)
+                    },
+                    "mouse": {
+                        "sensitivity": 100,  # Mouse movement amount in pixels
+                        "capture_mouse": True  # Whether to capture/constrain mouse to window
                     },
                     "screenshot_key": "f9",  # Key combination for taking screenshots
                     "movement_duration": 0.1,  # Duration to hold key/stick
@@ -89,6 +96,32 @@ class GamePanoCapture:
 
         except Exception as e:
             print(f"Error initializing virtual gamepad: {e}")
+            return False
+
+    def init_mouse(self, game_config):
+        """Initialize mouse control if needed"""
+        if game_config["control_type"] != "mouse":
+            return True
+
+        if self.mouse_initialized:
+            return True
+
+        try:
+            print("Initializing mouse control...")
+            print("IMPORTANT: Make sure the game window is in focus when testing!")
+            print("The mouse will send relative movements to the active window.")
+            
+            # Initialize pygame for mouse events (but don't capture)
+            if not self.pygame_initialized:
+                pygame.init()
+                self.pygame_initialized = True
+                print("Pygame initialized for mouse control")
+
+            self.mouse_initialized = True
+            return True
+
+        except Exception as e:
+            print(f"Error initializing mouse control: {e}")
             return False
 
     def take_screenshot(self, screenshot_number, game_config):
@@ -171,6 +204,97 @@ class GamePanoCapture:
             except Exception as e:
                 print(f"Error moving virtual gamepad stick: {e}")
 
+        elif game_config["control_type"] == "mouse":
+            if not self.init_mouse(game_config):
+                print("Error: Could not initialize mouse control")
+                return
+
+            # Get mouse movement amount from config
+            mouse_config = game_config.get("mouse", {})
+            sensitivity = mouse_config.get("sensitivity", 100)
+
+            # Map directions to mouse movements
+            if direction == "right":
+                mouse_x = sensitivity
+                mouse_y = 0
+            elif direction == "left":
+                mouse_x = -sensitivity
+                mouse_y = 0
+            elif direction == "up":
+                mouse_x = 0
+                mouse_y = -sensitivity  # Negative Y is up for mouse
+            elif direction == "down":
+                mouse_x = 0
+                mouse_y = sensitivity   # Positive Y is down for mouse
+            else:
+                print(f"Unknown direction: {direction}")
+                return
+
+            # Simulate relative mouse movement (what games expect)
+            try:
+                print(f"Moving mouse: {direction} (relative x={mouse_x}, y={mouse_y})")
+                
+                # Use platform-specific relative mouse movement
+                if platform.system() == "Windows":
+                    # Use win32api for Windows relative movement
+                    try:
+                        import win32api, win32con
+                        # Send relative mouse movement using SendInput-like approach
+                        # This simulates actual mouse movement that games can detect
+                        
+                        # Method 1: Try relative mouse_event (deprecated but works)
+                        win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, mouse_x, mouse_y, 0, 0)
+                        print(f"Windows: Sent relative mouse movement (dx={mouse_x}, dy={mouse_y})")
+                        
+                    except ImportError:
+                        print("win32api not available - mouse movement may not work in games")
+                        print("Install pywin32 with: pip install pywin32")
+                        # Fallback to absolute positioning (won't work in most games)
+                        current_pos = pygame.mouse.get_pos()
+                        new_x = current_pos[0] + mouse_x
+                        new_y = current_pos[1] + mouse_y
+                        pygame.mouse.set_pos((new_x, new_y))
+                        print(f"Pygame fallback: Moved mouse from {current_pos} to ({new_x}, {new_y})")
+                        
+                    except Exception as e:
+                        print(f"Windows mouse error: {e}")
+                        print("Trying alternative method...")
+                        # Try alternative win32 method
+                        try:
+                            import win32gui
+                            # Get current cursor position and move relatively
+                            current_x, current_y = win32api.GetCursorPos()
+                            new_x = current_x + mouse_x
+                            new_y = current_y + mouse_y
+                            win32api.SetCursorPos((new_x, new_y))
+                            print(f"Windows absolute: Moved from ({current_x}, {current_y}) to ({new_x}, {new_y})")
+                        except:
+                            print("All Windows mouse methods failed")
+                else:
+                    # For non-Windows platforms, use pygame
+                    print("Non-Windows platform: Using pygame mouse control")
+                    current_pos = pygame.mouse.get_pos()
+                    new_x = current_pos[0] + mouse_x
+                    new_y = current_pos[1] + mouse_y
+                    pygame.mouse.set_pos((new_x, new_y))
+                    print(f"Pygame: Moved mouse from {current_pos} to ({new_x}, {new_y})")
+                
+                # Hold the movement for the specified duration
+                time.sleep(movement_duration)
+                
+                # Process any pygame events
+                if self.pygame_initialized:
+                    pygame.event.pump()
+
+            except Exception as e:
+                print(f"Error moving mouse: {e}")
+                print(f"Platform: {platform.system()}")
+                print("Mouse control troubleshooting:")
+                print("1. Make sure the game window is in focus")
+                print("2. On Windows, install pywin32: pip install pywin32")
+                print("3. Some games may not respond to programmatic mouse input")
+                print("4. Try increasing mouse sensitivity in the config")
+
         time.sleep(game_config["pause_between_moves"])
 
     def capture_panorama(self, game_name="default"):
@@ -181,10 +305,14 @@ class GamePanoCapture:
 
         game_config = self.config["games"][game_name]
 
-        # Initialize gamepad if needed
+        # Initialize control system if needed
         if game_config["control_type"] == "gamepad":
             if not self.init_gamepad(game_config):
                 print("Failed to initialize gamepad. Aborting capture.")
+                return
+        elif game_config["control_type"] == "mouse":
+            if not self.init_mouse(game_config):
+                print("Failed to initialize mouse control. Aborting capture.")
                 return
 
         print(f"\n=== 360° Panorama Capture Started ===")
@@ -266,8 +394,8 @@ class GamePanoCapture:
         print(f"\n=== Setting up configuration for '{game_name}' ===")
 
         # Control type
-        control_type = input("Control type (keyboard/gamepad) [keyboard]: ").lower()
-        if control_type not in ["keyboard", "gamepad"]:
+        control_type = input("Control type (keyboard/gamepad/mouse) [keyboard]: ").lower()
+        if control_type not in ["keyboard", "gamepad", "mouse"]:
             control_type = "keyboard"
 
         config = {
@@ -289,13 +417,23 @@ class GamePanoCapture:
                 "up": input("Up key [up]: ") or "up",
                 "down": input("Down key [down]: ") or "down"
             }
-        else:
+        elif control_type == "gamepad":
             stick_movement = input("Stick movement amount (0.1-1.0) [0.8]: ") or "0.8"
 
             config["gamepad"] = {
                 "stick_movement_amount": float(stick_movement)
             }
             print("Virtual gamepad support implemented using vgamepad!")
+        elif control_type == "mouse":
+            sensitivity = input("Mouse sensitivity in pixels (10-500) [100]: ") or "100"
+            capture_mouse = input("Capture mouse during operation? (y/n) [y]: ").lower()
+            capture_mouse = capture_mouse != "n"
+
+            config["mouse"] = {
+                "sensitivity": int(sensitivity),
+                "capture_mouse": capture_mouse
+            }
+            print("Mouse control configured!")
 
         # Save configuration
         self.config["games"][game_name] = config

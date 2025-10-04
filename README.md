@@ -211,8 +211,7 @@ The script supports various key formats:
       "control_type": "gamepad",
       "screenshot_key": "f9",
       "gamepad": {
-        "stick_movement_amount": 0.8,
-        "gamepad_index": 0
+        "stick_movement_amount": 0.8
       },
       "movement_duration": 0.1,
       "pause_between_moves": 0.3,
