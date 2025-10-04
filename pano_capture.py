@@ -114,10 +114,16 @@ class GamePanoCapture:
 
     def move_camera(self, direction, game_config):
         """Move camera in specified direction"""
+        # Determine movement duration based on direction
+        if direction in ["left", "right"]:
+            movement_duration = game_config.get("horizontal_movement_duration", game_config["movement_duration"])
+        else:  # up, down
+            movement_duration = game_config.get("vertical_movement_duration", game_config["movement_duration"])
+            
         if game_config["control_type"] == "keyboard":
             key = game_config["keys"][direction]
             keyboard.press(key)
-            time.sleep(game_config["movement_duration"])
+            time.sleep(movement_duration)
             keyboard.release(key)
         elif game_config["control_type"] == "gamepad":
             if not self.init_gamepad(game_config):
@@ -126,7 +132,6 @@ class GamePanoCapture:
 
             # Get movement amount from config
             stick_amount = game_config.get("gamepad", {}).get("stick_movement_amount", 0.8)
-            movement_duration = game_config["movement_duration"]
 
             # Map directions to right stick movements
             if direction == "right":
@@ -381,6 +386,8 @@ class GamePanoCapture:
 
         # Calculate timing components (in seconds)
         movement_duration = game_config["movement_duration"]
+        horizontal_movement_duration = game_config.get("horizontal_movement_duration", movement_duration)
+        vertical_movement_duration = game_config.get("vertical_movement_duration", movement_duration)
         pause_between_moves = game_config["pause_between_moves"]
         screenshot_delay = game_config.get("screenshot_delay", 0.5)
         screenshot_pause = game_config.get("screenshot_pause", 0.8)
@@ -391,11 +398,11 @@ class GamePanoCapture:
 
         # For horizontal movements: (horizontal_steps - 1) movements per vertical level
         horizontal_movements = (horizontal_steps - 1) * (vertical_steps + 1)
-        horizontal_movement_time = horizontal_movements * (movement_duration + pause_between_moves)
+        horizontal_movement_time = horizontal_movements * (horizontal_movement_duration + pause_between_moves)
 
         # For vertical movements: vertical_steps movements total
         vertical_movements = vertical_steps
-        vertical_movement_time = vertical_movements * (movement_duration + pause_between_moves)
+        vertical_movement_time = vertical_movements * (vertical_movement_duration + pause_between_moves)
 
         # Total time (plus 5 second countdown)
         total_time = screenshot_time + horizontal_movement_time + vertical_movement_time + 5
@@ -409,6 +416,8 @@ class GamePanoCapture:
 
         print(f"\nTiming settings:")
         print(f"  Movement duration: {movement_duration}s")
+        print(f"  Horizontal movement duration: {horizontal_movement_duration}s")
+        print(f"  Vertical movement duration: {vertical_movement_duration}s")
         print(f"  Pause between moves: {pause_between_moves}s")
         print(f"  Screenshot delay: {screenshot_delay}s")
         print(f"  Screenshot pause: {screenshot_pause}s")
