@@ -20,7 +20,46 @@ game-360-panorama-capture/
 - A screenshot/region capture tool (e.g., ShareX, Greenshot, etc.)
 - Video games with photo mode capability
 
-### Install Python
+## Getting Started
+
+```bash
+# Create a new virtual environment
+python -m venv venv
+
+# Activate the virtual environment
+source venv/bin/activate  # On macOS/Linux
+venv\Scripts\activate     # On Windows
+```
+
+```bash
+# Install required packages.
+pip install -r requirements.txt
+```
+
+```bash
+# Setup a game
+python pano_capture.py --setup "Cyberpunk 2077"
+```
+
+```bash
+# Capture a panorama
+python pano_capture.py --capture "Cyberpunk 2077"
+```
+
+Before doing a full capture, test your settings:
+
+```bash
+# Test horizontal rotation (360° test)
+python pano_capture.py --test-horizontal "Cyberpunk 2077"
+
+# Test vertical movement (nadir to zenith)
+python pano_capture.py --test-vertical "Cyberpunk 2077"
+
+# Test screenshot keybind
+python pano_capture.py --test-screenshot "Cyberpunk 2077"
+```
+
+## Install Python
 
 If you don't have Python installed:
 
@@ -30,34 +69,15 @@ If you don't have Python installed:
 # macOS: 
 brew install python
 # Linux (Ubuntu/Debian):
-sudo apt install python3 python3-pip
+sudo apt install python python-pip
 ```
 
 Verify the installation:
 ```bash
-python3 --version
+python --version
 ```
 
-### Set Up Virtual Environment
-
-```bash
-# Create a new virtual environment
-python3 -m venv venv
-
-# Activate the virtual environment
-source venv/bin/activate  # On macOS/Linux
-venv\Scripts\activate     # On Windows
-```
-
-### Install Required Packages
-
-```bash
-pip install -r requirements.txt
-```
-
-## Game Panorama Capture
-
-### Overview
+## Overview
 
 Game 360° Panorama Capture is an automation tool that captures spherical panoramic screenshots from video games with photo modes. It systematically moves the camera in a spherical pattern and triggers your screenshot tool to capture images suitable for creating equirectangular panoramas.
 
@@ -77,7 +97,7 @@ Game 360° Panorama Capture is an automation tool that captures spherical panora
 Configure a new game with its specific settings:
 
 ```bash
-python3 pano_capture.py --setup "Cyberpunk 2077"
+python pano_capture.py --setup "Cyberpunk 2077"
 ```
 
 You'll be prompted to configure:
@@ -93,10 +113,13 @@ Before doing a full capture, test your settings:
 
 ```bash
 # Test horizontal rotation (360° test)
-python3 pano_capture.py --test-horizontal "Cyberpunk 2077"
+python pano_capture.py --test-horizontal "Cyberpunk 2077"
 
 # Test vertical movement (nadir to zenith)
-python3 pano_capture.py --test-vertical "Cyberpunk 2077"
+python pano_capture.py --test-vertical "Cyberpunk 2077"
+
+# Test screenshot keybind
+python pano_capture.py --test-screenshot "Cyberpunk 2077"
 ```
 
 These tests will verify camera movement works correctly before doing a full capture.
@@ -106,7 +129,7 @@ These tests will verify camera movement works correctly before doing a full capt
 Once configured and tested:
 
 ```bash
-python3 pano_capture.py --capture "Cyberpunk 2077"
+python pano_capture.py --capture "Cyberpunk 2077"
 ```
 
 ### Capture Workflow
@@ -204,9 +227,9 @@ The script supports various key formats:
 
 **Gamepad Settings:**
 - `stick_movement_amount`: How far to move the right stick (0.1-1.0)
-- Uses the right analog stick for camera movement
+- It Uses the right analog stick for camera movement
 
-#### Screenshot Tool Integration
+### Screenshot Tool Integration
 
 Popular screenshot tools and their typical keybinds:
 - **ShareX**: `ctrl+shift+4` (region capture)
@@ -214,23 +237,26 @@ Popular screenshot tools and their typical keybinds:
 - **Windows Snipping Tool**: `win+shift+s`
 - **macOS Screenshot**: `cmd+shift+4`
 
-### Command Reference
+## Command Reference
 
 ```bash
 # Setup new game configuration
-python3 pano_capture.py --setup "Game Name"
+python pano_capture.py --setup "Game Name"
 
 # Capture panorama for configured game
-python3 pano_capture.py --capture "Game Name"
+python pano_capture.py --capture "Game Name"
 
 # Test horizontal rotation (360° test)
-python3 pano_capture.py --test-horizontal "Game Name"
+python pano_capture.py --test-horizontal "Game Name"
 
 # Test vertical movement (nadir to zenith)
-python3 pano_capture.py --test-vertical "Game Name"
+python pano_capture.py --test-vertical "Game Name"
+
+# Test screenshot keybind
+python pano_capture.py --test-screenshot "Game Name"
 
 # List all configured games
-python3 pano_capture.py --list
+python pano_capture.py --list
 ```
 
 ## Complete Workflow
@@ -240,29 +266,20 @@ Follow these steps to create a 360° panorama from a video game:
 ### 1. **Initial Setup**
 ```bash
 # Configure your game
-python3 pano_capture.py --setup "My Favorite Game"
+python pano_capture.py --setup "My Favorite Game"
 ```
 
-### 2. **Test Configuration**
-```bash
-# Test horizontal rotation (360° test)
-python3 pano_capture.py --test-horizontal "My Favorite Game"
-
-# Test vertical movement (nadir to zenith)
-python3 pano_capture.py --test-vertical "My Favorite Game"
-```
-
-### 3. **Prepare Game Environment**
+### 2. **Prepare Game Environment**
 - Launch your game
 - Navigate to the desired location
 - Setup your capture region in your screenshot tool
 - Enter photo mode
 - Position camera at zenith (straight up)
 
-### 4. **Capture Session**
+### 3. **Capture Session**
 ```bash
 # Start automated capture
-python3 pano_capture.py --capture "My Favorite Game"
+python pano_capture.py --capture "My Favorite Game"
 ```
 
 ### 5. **Create Panorama**
@@ -285,7 +302,7 @@ python3 pano_capture.py --capture "My Favorite Game"
 #### Screenshot Quality
 - Configure your screenshot tool for highest quality
 - Ensure consistent region capture (same area every time)
-- Consider using lossless formats (PNG) for best stitching results
+- Avoid UI elements in the capture area
 
 ### Troubleshooting
 
@@ -294,6 +311,8 @@ python3 pano_capture.py --capture "My Favorite Game"
 - **Missing coverage areas**: Increase `horizontal_steps` or `vertical_steps`
 - **Game loses focus**: Ensure game window stays active during capture
 - **Inconsistent movement**: Some games may need longer delays or different key mappings
+
+#### Troubleshooting
 
 ### Gamepad Support
 
@@ -323,7 +342,7 @@ pip install vgamepad
    python pano_capture.py --test-screenshot "Your Game"
    
    # Linux/macOS
-   sudo python3 pano_capture.py --test-screenshot "Your Game"
+   sudo python pano_capture.py --test-screenshot "Your Game"
    ```
 
 3. **Test with --test-screenshot first**
@@ -337,3 +356,4 @@ pip install vgamepad
 Planned features for future versions:
 - Automatic panorama stitching integration
 - HDR capture support for compatible games
+- Independent configurable movement speed for horizontal and vertical axes
