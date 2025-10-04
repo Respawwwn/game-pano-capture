@@ -517,13 +517,15 @@ class GamePanoCapture:
 
     def test_horizontal_rotation(self, game_name, game_config):
         """Test complete horizontal rotation to verify 360° coverage"""
+        movement_config = game_config.get("movement", {})
+        
         print(f"\n=== Testing Horizontal Rotation for '{game_name}' ===")
-        print(f"Horizontal steps configured: {game_config['horizontal_steps']}")
-        print(f"Movement duration: {game_config['movement_duration']}s")
-        print(f"Pause between moves: {game_config['pause_between_moves']}s")
+        print(f"Horizontal steps configured: {movement_config.get('horizontal_steps', 36)}")
+        print(f"Horizontal movement duration: {movement_config.get('horizontal_movement_duration', 0.1)}s")
+        print(f"Pause between moves: {movement_config.get('pause_between_moves', 0.3)}s")
         print("\nThis will perform a complete 360° horizontal rotation.")
         print("Watch the camera movement to see if it completes exactly one full rotation.")
-        print("If it rotates too much or too little, adjust 'horizontal_steps' in your config.")
+        print("If it rotates too much or too little, adjust 'movement.horizontal_steps' in your config.")
 
         print(f"\nStarting test in 5 seconds...")
         print("Focus the game window now!")
@@ -535,25 +537,28 @@ class GamePanoCapture:
         print("\n=== Starting Horizontal Rotation Test ===")
 
         try:
-            for step in range(game_config["horizontal_steps"]):
-                print(f"Step {step + 1}/{game_config['horizontal_steps']}")
+            horizontal_steps = movement_config.get('horizontal_steps', 36)
+            for step in range(horizontal_steps):
+                print(f"Step {step + 1}/{horizontal_steps}")
                 self.move_camera("right", game_config)
 
             print(f"\n=== Horizontal Test Complete ===")
             print("Did the camera complete exactly one full 360° rotation?")
-            print("- If it rotated too much: DECREASE 'horizontal_steps'")
-            print("- If it didn't complete full rotation: INCREASE 'horizontal_steps'")
-            print("- If rotation was too fast/slow: adjust 'movement_duration' and 'pause_between_moves'")
+            print("- If it rotated too much: DECREASE 'movement.horizontal_steps'")
+            print("- If it didn't complete full rotation: INCREASE 'movement.horizontal_steps'")
+            print("- If rotation was too fast/slow: adjust 'movement.horizontal_movement_duration' and 'movement.pause_between_moves'")
 
         except KeyboardInterrupt:
             print(f"\n=== Test Interrupted ===")
 
     def test_vertical_movement(self, game_name, game_config):
         """Test vertical movement from zenith to nadir"""
+        movement_config = game_config.get("movement", {})
+        
         print(f"\n=== Testing Vertical Movement for '{game_name}' ===")
-        print(f"Vertical steps configured: {game_config['vertical_steps']}")
-        print(f"Movement duration: {game_config['movement_duration']}s")
-        print(f"Pause between moves: {game_config['pause_between_moves']}s")
+        print(f"Vertical steps configured: {movement_config.get('vertical_steps', 18)}")
+        print(f"Vertical movement duration: {movement_config.get('vertical_movement_duration', 0.1)}s")
+        print(f"Pause between moves: {movement_config.get('pause_between_moves', 0.3)}s")
         print("\nThis will move the camera from zenith (straight up) to nadir (straight down).")
         print("Make sure your camera is positioned at zenith before starting!")
         print("Watch to see if it reaches exactly nadir (straight down) at the end.")
@@ -568,15 +573,16 @@ class GamePanoCapture:
         print("\n=== Starting Vertical Movement Test ===")
 
         try:
-            for step in range(game_config["vertical_steps"]):
-                print(f"Step {step + 1}/{game_config['vertical_steps']}")
+            vertical_steps = movement_config.get('vertical_steps', 18)
+            for step in range(vertical_steps):
+                print(f"Step {step + 1}/{vertical_steps}")
                 self.move_camera("down", game_config)
 
             print(f"\n=== Vertical Test Complete ===")
             print("Did the camera reach exactly nadir (straight bottom)?")
-            print("- If it went too far past nadir: DECREASE 'vertical_steps'")
-            print("- If it didn't reach nadir: INCREASE 'vertical_steps'")
-            print("- If movement was too fast/slow: adjust 'movement_duration' and 'pause_between_moves'")
+            print("- If it went too far past nadir: DECREASE 'movement.vertical_steps'")
+            print("- If it didn't reach nadir: INCREASE 'movement.vertical_steps'")
+            print("- If movement was too fast/slow: adjust 'movement.vertical_movement_duration' and 'movement.pause_between_moves'")
 
         except KeyboardInterrupt:
             print(f"\n=== Test Interrupted ===")
@@ -588,19 +594,20 @@ class GamePanoCapture:
             return
 
         game_config = self.config["games"][game_name]
+        movement_config = game_config.get("movement", {})
+        screenshot_config = game_config.get("screenshot", {})
 
         # Calculate total screenshots
-        horizontal_steps = game_config["horizontal_steps"]
-        vertical_steps = game_config["vertical_steps"]
+        horizontal_steps = movement_config.get("horizontal_steps", 36)
+        vertical_steps = movement_config.get("vertical_steps", 18)
         total_screenshots = horizontal_steps * (vertical_steps + 1)
 
         # Calculate timing components (in seconds)
-        movement_duration = game_config["movement_duration"]
-        horizontal_movement_duration = game_config.get("horizontal_movement_duration", movement_duration)
-        vertical_movement_duration = game_config.get("vertical_movement_duration", movement_duration)
-        pause_between_moves = game_config["pause_between_moves"]
-        screenshot_delay = game_config.get("screenshot_delay", 0.5)
-        screenshot_pause = game_config.get("screenshot_pause", 0.8)
+        horizontal_movement_duration = movement_config.get("horizontal_movement_duration", 0.1)
+        vertical_movement_duration = movement_config.get("vertical_movement_duration", 0.1)
+        pause_between_moves = movement_config.get("pause_between_moves", 0.3)
+        screenshot_delay = screenshot_config.get("delay", 0.5)
+        screenshot_pause = screenshot_config.get("pause", 0.8)
 
         # Time calculations
         # For each screenshot: screenshot_delay + screenshot_pause
@@ -656,12 +663,13 @@ class GamePanoCapture:
             return
 
         game_config = self.config["games"][game_name]
-        screenshot_key = game_config.get("screenshot_key", "f9")
+        screenshot_config = game_config.get("screenshot", {})
+        screenshot_key = screenshot_config.get("key", "f9")
 
         print(f"\n=== Testing Screenshot Tool for '{game_name}' ===")
         print(f"Screenshot key configured: {screenshot_key}")
-        print(f"Screenshot delay: {game_config.get('screenshot_delay', 0.5)}s")
-        print(f"Screenshot pause: {game_config.get('screenshot_pause', 0.8)}s")
+        print(f"Screenshot delay: {screenshot_config.get('delay', 0.5)}s")
+        print(f"Screenshot pause: {screenshot_config.get('pause', 0.8)}s")
         print("\nThis will test your screenshot tool by taking 3 test screenshots.")
         print("Make sure:")
         print("- Your screenshot tool is running and ready")
@@ -682,7 +690,7 @@ class GamePanoCapture:
                 print(f"Taking test screenshot {test_num}/3...")
 
                 # Take screenshot using configured keybind
-                time.sleep(game_config.get("screenshot_delay", 0.5))
+                time.sleep(screenshot_config.get("delay", 0.5))
                 if self.take_screenshot(test_num, game_config):
                     print(f"✓ Screenshot {test_num} triggered successfully")
                 else:
