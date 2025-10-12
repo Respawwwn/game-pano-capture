@@ -632,7 +632,6 @@ class GamePanoCapture:
         print(f"  Screenshot key: {game_config.get('screenshot_key', 'f9')}")
 
         print(f"\nTiming settings:")
-        print(f"  Movement duration: {movement_duration}s")
         print(f"  Horizontal movement duration: {horizontal_movement_duration}s")
         print(f"  Vertical movement duration: {vertical_movement_duration}s")
         print(f"  Pause between moves: {pause_between_moves}s")
