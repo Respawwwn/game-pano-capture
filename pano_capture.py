@@ -58,7 +58,8 @@ class GamePanoCapture:
                     },
                     "mouse": {
                         "sensitivity": 100,
-                        "capture_mouse": False
+                        "capture_mouse": False,
+                        "click_to_move": False
                     }
                 }
             },
@@ -251,6 +252,7 @@ class GamePanoCapture:
             # Get mouse movement amount from config
             controls_config = game_config.get("controls", {}).get("mouse", {})
             sensitivity = controls_config.get("sensitivity", 100)
+            click_to_move = controls_config.get("click_to_move", False)
 
             # Map directions to mouse movements
             if direction == "right":
@@ -271,17 +273,24 @@ class GamePanoCapture:
 
             # Simulate relative mouse movement
             try:
-                print(f"Moving mouse: {direction} (relative x={mouse_x}, y={mouse_y})")
+                if click_to_move:
+                    print(f"Moving mouse with left-click: {direction} (relative x={mouse_x}, y={mouse_y})")
+                else:
+                    print(f"Moving mouse: {direction} (relative x={mouse_x}, y={mouse_y})")
 
                 # Use platform-specific relative mouse movement
                 if platform.system() == "Windows":
                     # Use win32api for Windows relative movement
                     try:
                         import win32api, win32con
+                        
+                        if click_to_move:
+                            # Press left mouse button down for click-to-move
+                            win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
+                            print("Left mouse button pressed")
+                        
                         # Send relative mouse movement using SendInput-like approach
                         # This simulates actual mouse movement that games can detect
-
-                        # Method 1: Try relative mouse_event (deprecated but works)
                         win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, mouse_x, mouse_y, 0, 0)
                         print(f"Windows: Sent relative mouse movement (dx={mouse_x}, dy={mouse_y})")
 
@@ -292,6 +301,12 @@ class GamePanoCapture:
                         current_pos = pygame.mouse.get_pos()
                         new_x = current_pos[0] + mouse_x
                         new_y = current_pos[1] + mouse_y
+                        
+                        if click_to_move:
+                            # Use pygame for left click
+                            pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=current_pos))
+                            print("Left mouse button pressed (pygame)")
+                        
                         pygame.mouse.set_pos((new_x, new_y))
                         print(f"Pygame fallback: Moved mouse from {current_pos} to ({new_x}, {new_y})")
 
@@ -303,6 +318,12 @@ class GamePanoCapture:
                             import win32gui
                             # Get current cursor position and move relatively
                             current_x, current_y = win32api.GetCursorPos()
+                            
+                            if click_to_move:
+                                # Press left mouse button down for click-to-move
+                                win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
+                                print("Left mouse button pressed (alternative)")
+                            
                             new_x = current_x + mouse_x
                             new_y = current_y + mouse_y
                             win32api.SetCursorPos((new_x, new_y))
@@ -313,6 +334,12 @@ class GamePanoCapture:
                     # For non-Windows platforms, use pygame
                     print("Non-Windows platform: Using pygame mouse control")
                     current_pos = pygame.mouse.get_pos()
+                    
+                    if click_to_move:
+                        # Use pygame for left click
+                        pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=current_pos))
+                        print("Left mouse button pressed (pygame)")
+                    
                     new_x = current_pos[0] + mouse_x
                     new_y = current_pos[1] + mouse_y
                     pygame.mouse.set_pos((new_x, new_y))
@@ -320,6 +347,24 @@ class GamePanoCapture:
 
                 # Hold the movement for the specified duration
                 time.sleep(movement_duration)
+
+                # Release left mouse button if click_to_move was enabled
+                if click_to_move:
+                    if platform.system() == "Windows":
+                        try:
+                            import win32api, win32con
+                            win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
+                            print("Left mouse button released")
+                        except:
+                            # Fallback to pygame
+                            current_pos = pygame.mouse.get_pos()
+                            pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=current_pos))
+                            print("Left mouse button released (pygame)")
+                    else:
+                        # For non-Windows platforms, use pygame
+                        current_pos = pygame.mouse.get_pos()
+                        pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=current_pos))
+                        print("Left mouse button released (pygame)")
 
                 # Process any pygame events
                 if self.pygame_initialized:
@@ -499,11 +544,17 @@ class GamePanoCapture:
             sensitivity = input("Mouse sensitivity in pixels (10-500) [100]: ") or "100"
             capture_mouse = input("Capture mouse during operation? (y/n) [n]: ").lower()
             capture_mouse = capture_mouse == "y"
+            click_to_move = input("Enable click-to-move for camera? (y/n) [n]: ").lower()
+            click_to_move = click_to_move == "y"
             config["controls"]["mouse"] = {
                 "sensitivity": int(sensitivity),
-                "capture_mouse": capture_mouse
+                "capture_mouse": capture_mouse,
+                "click_to_move": click_to_move
             }
-            print("Mouse control configured!")
+            if click_to_move:
+                print("Mouse control configured with click-to-move for camera!")
+            else:
+                print("Mouse control configured!")
 
         # Save configuration
         self.config["games"][game_name] = config
