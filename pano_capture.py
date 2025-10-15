@@ -11,15 +11,25 @@ import json
 import platform
 from datetime import datetime
 from pathlib import Path
-import keyboard
 import argparse
 import pygame
-import vgamepad as vg
+from control import KeyboardFactory
+from core import ConfigManager, ConfigDefaults
+from core.constants import (
+    DEFAULT_HORIZONTAL_STEPS, DEFAULT_VERTICAL_STEPS,
+    DEFAULT_HORIZONTAL_MOVEMENT_DURATION, DEFAULT_VERTICAL_MOVEMENT_DURATION,
+    DEFAULT_PAUSE_BETWEEN_MOVES, DEFAULT_SCREENSHOT_KEY,
+    DEFAULT_SCREENSHOT_DELAY, DEFAULT_SCREENSHOT_PAUSE,
+    DEFAULT_GAMEPAD_STICK_MOVEMENT, DEFAULT_MOUSE_SENSITIVITY,
+    CAPTURE_COUNTDOWN_SECONDS
+)
 
 class GamePanoCapture:
     def __init__(self, config_file="game_config.json"):
-        self.config_file = config_file
-        self.config = self.load_config()
+        # Initialize configuration manager
+        self.config_manager = ConfigManager(config_file)
+        self.config = self.config_manager.load()
+
         self.screenshot_count = 0
         self.output_dir = None
         self.gamepad = None
@@ -28,81 +38,8 @@ class GamePanoCapture:
         self.pygame_initialized = False
         self.mouse_initialized = False
 
-    def load_config(self):
-        """Load or create configuration file"""
-        default_config = {
-            "_comment": "360° Game Screenshot Automation Configuration",
-            "_version": "2.0",
-            "defaults": {
-                "movement": {
-                    "horizontal_steps": 36,
-                    "vertical_steps": 18,
-                    "horizontal_movement_duration": 0.1,
-                    "vertical_movement_duration": 0.1,
-                    "pause_between_moves": 0.3
-                },
-                "screenshot": {
-                    "key": "f9",
-                    "delay": 0.5,
-                    "pause": 0.8
-                },
-                "controls": {
-                    "keyboard": {
-                        "left": "left",
-                        "right": "right",
-                        "up": "up",
-                        "down": "down"
-                    },
-                    "gamepad": {
-                        "stick_movement_amount": 0.8
-                    },
-                    "mouse": {
-                        "sensitivity": 100,
-                        "capture_mouse": False
-                    }
-                }
-            },
-            "games": {
-                "default": {
-                    "description": "Default configuration template",
-                    "control_type": "keyboard",
-                    "movement": {
-                        "horizontal_steps": 36,
-                        "vertical_steps": 18,
-                         "horizontal_movement_duration": 0.1,
-                        "vertical_movement_duration": 0.1,
-                        "pause_between_moves": 0.3
-                    },
-                    "screenshot": {
-                        "key": "f9",
-                        "delay": 0.5,
-                        "pause": 0.8
-                    },
-                    "controls": {
-                        "keyboard": {
-                            "left": "left",
-                            "right": "right",
-                            "up": "up",
-                            "down": "down"
-                        }
-                    }
-                }
-            }
-        }
-
-        if os.path.exists(self.config_file):
-            try:
-                with open(self.config_file, 'r') as f:
-                    return json.load(f)
-            except:
-                print(f"Error reading config file. Using defaults.")
-                return default_config
-        else:
-            # Create default config file
-            with open(self.config_file, 'w') as f:
-                json.dump(default_config, f, indent=4)
-            print(f"Created default config file: {self.config_file}")
-            return default_config
+        # Initialize platform-specific keyboard handler
+        self.keyboard_handler = KeyboardFactory.create_handler()
 
     def setup_output_directory(self, game_name="capture"):
         """Create output directory for session info"""
@@ -119,13 +56,26 @@ class GamePanoCapture:
         if self.gamepad_initialized:
             return True
 
+        # Check if we're on Windows
+        if platform.system() != "Windows":
+            print("Error: Virtual gamepad support (vgamepad) is only available on Windows")
+            print("On non-Windows platforms, please use keyboard or mouse control types")
+            return False
+
         try:
+            # Import vgamepad only on Windows
+            import vgamepad as vg
             # Create virtual Xbox 360 gamepad
             self.virtual_gamepad = vg.VX360Gamepad()
             print("Virtual Xbox 360 gamepad created successfully")
             self.gamepad_initialized = True
             return True
 
+        except ImportError:
+            print("Error: vgamepad not available - gamepad support requires vgamepad package")
+            print("Install vgamepad with: pip install vgamepad")
+            print("Note: vgamepad only works on Windows")
+            return False
         except Exception as e:
             print(f"Error initializing virtual gamepad: {e}")
             return False
@@ -159,22 +109,21 @@ class GamePanoCapture:
     def take_screenshot(self, screenshot_number, game_config):
         """Trigger screenshot using configured keybind"""
         try:
-            screenshot_config = game_config.get("screenshot", {})
-            screenshot_key = screenshot_config.get("key", "f9")
+            screenshot_config = game_config["screenshot"]
+            screenshot_key = screenshot_config["key"]
             print(f"Taking screenshot {screenshot_number:04d} (pressing {screenshot_key})...")
 
-            # Handle key combinations (e.g., "ctrl+shift+f9", "alt+1")
-            if "+" in screenshot_key:
-                keys = screenshot_key.split("+")
-                # Use keyboard.press_and_release for better Windows compatibility
-                keyboard.press_and_release(screenshot_key)
-            else:
-                keyboard.press_and_release(screenshot_key)
+            # Use platform-specific keyboard handler.
+            success = self.keyboard_handler.press_key_combination(screenshot_key)
 
-            # Wait for screenshot to be processed by external tool
-            screenshot_pause = screenshot_config.get("pause", 0.8)
-            time.sleep(screenshot_pause)
-            return True
+            if success:
+                # Wait for screenshot to be processed by external tool
+                screenshot_pause = screenshot_config["pause"]
+                time.sleep(screenshot_pause)
+                return True
+            else:
+                return False
+
         except Exception as e:
             print(f"Error triggering screenshot: {e}")
             return False
@@ -186,16 +135,18 @@ class GamePanoCapture:
 
         # Determine movement duration based on direction
         if direction in ["left", "right"]:
-            movement_duration = movement_config.get("horizontal_movement_duration", 0.1)
+            movement_duration = movement_config["horizontal_movement_duration"]
         else:  # up, down
-            movement_duration = movement_config.get("vertical_movement_duration", 0.1)
+            movement_duration = movement_config["vertical_movement_duration"]
 
         if game_config["control_type"] == "keyboard":
             controls_config = game_config.get("controls", {}).get("keyboard", {})
             key = controls_config.get(direction, direction)
-            keyboard.press(key)
-            time.sleep(movement_duration)
-            keyboard.release(key)
+
+            # Use platform-specific keyboard handler
+            success = self.keyboard_handler.press_key(key, movement_duration)
+            if not success:
+                return
         elif game_config["control_type"] == "gamepad":
             if not self.init_gamepad(game_config):
                 print("Error: Could not initialize gamepad")
@@ -203,7 +154,8 @@ class GamePanoCapture:
 
             # Get movement amount from config
             controls_config = game_config.get("controls", {}).get("gamepad", {})
-            stick_amount = controls_config.get("stick_movement_amount", 0.8)
+            from core.constants import DEFAULT_GAMEPAD_STICK_MOVEMENT
+            stick_amount = controls_config.get("stick_movement_amount", DEFAULT_GAMEPAD_STICK_MOVEMENT)
 
             # Map directions to right stick movements
             if direction == "right":
@@ -250,7 +202,7 @@ class GamePanoCapture:
 
             # Get mouse movement amount from config
             controls_config = game_config.get("controls", {}).get("mouse", {})
-            sensitivity = controls_config.get("sensitivity", 100)
+            sensitivity = controls_config.get("sensitivity", DEFAULT_MOUSE_SENSITIVITY)
 
             # Map directions to mouse movements
             if direction == "right":
@@ -334,16 +286,16 @@ class GamePanoCapture:
                 print("3. Some games may not respond to programmatic mouse input")
                 print("4. Try increasing mouse sensitivity in the config")
 
-        movement_config = game_config.get("movement", {})
-        time.sleep(movement_config.get("pause_between_moves", 0.3))
+        movement_config = game_config["movement"]
+        time.sleep(movement_config["pause_between_moves"])
 
     def capture_panorama(self, game_name="default"):
         """Main capture routine"""
-        if game_name not in self.config["games"]:
+        if not self.config_manager.has_game(game_name):
             print(f"Game '{game_name}' not found in config. Using default.")
             game_name = "default"
 
-        game_config = self.config["games"][game_name]
+        game_config = self.config_manager.get_game_config(game_name)
 
         # Initialize control system if needed
         if game_config["control_type"] == "gamepad":
@@ -356,23 +308,23 @@ class GamePanoCapture:
                 return
 
         # Get configuration sections
-        movement_config = game_config.get("movement", {})
-        screenshot_config = game_config.get("screenshot", {})
-        
+        movement_config = game_config["movement"]
+        screenshot_config = game_config["screenshot"]
+
         print(f"\n=== 360° Panorama Capture Started ===")
         print(f"Game: {game_name}")
-        print(f"Horizontal steps: {movement_config.get('horizontal_steps', 36)}")
-        print(f"Vertical steps: {movement_config.get('vertical_steps', 18)}")
+        print(f"Horizontal steps: {movement_config.get('horizontal_steps', DEFAULT_HORIZONTAL_STEPS)}")
+        print(f"Vertical steps: {movement_config.get('vertical_steps', DEFAULT_VERTICAL_STEPS)}")
         print(f"Control type: {game_config['control_type']}")
-        print(f"Screenshot key: {screenshot_config.get('key', 'f9')}")
+        print(f"Screenshot key: {screenshot_config['key']}")
 
-        print(f"\nStarting capture in 5 seconds...")
+        print(f"\nStarting capture in {CAPTURE_COUNTDOWN_SECONDS} seconds...")
         print("Make sure the game is in focus and camera is at zenith position (straight up)!")
         print("Make sure your screenshot tool is ready!")
-        print(f"Screenshot key: {screenshot_config.get('key', 'f9')}")
+        print(f"Screenshot key: {screenshot_config['key']}")
         print("Press Ctrl+C to abort at any time.")
 
-        for i in range(5, 0, -1):
+        for i in range(CAPTURE_COUNTDOWN_SECONDS, 0, -1):
             print(f"{i}...")
             time.sleep(1)
 
@@ -381,16 +333,16 @@ class GamePanoCapture:
 
         try:
             # Start from zenith and work downwards
-            horizontal_steps = movement_config.get("horizontal_steps", 36)
-            vertical_steps = movement_config.get("vertical_steps", 18)
-            
+            horizontal_steps = movement_config.get("horizontal_steps", DEFAULT_HORIZONTAL_STEPS)
+            vertical_steps = movement_config.get("vertical_steps", DEFAULT_VERTICAL_STEPS)
+
             for vertical_step in range(vertical_steps + 1):
                 print(f"\nVertical level {vertical_step + 1}/{vertical_steps + 1}")
 
                 # Take screenshots for complete horizontal rotation
                 for horizontal_step in range(horizontal_steps):
                     # Take screenshot using configured keybind
-                    screenshot_delay = screenshot_config.get("delay", 0.5)
+                    screenshot_delay = screenshot_config.get("delay", DEFAULT_SCREENSHOT_DELAY)
                     time.sleep(screenshot_delay)
                     if self.take_screenshot(self.screenshot_count + 1, game_config):
                         self.screenshot_count += 1
@@ -448,17 +400,17 @@ class GamePanoCapture:
 
         # Screenshot configuration
         print("\n--- Screenshot Settings ---")
-        screenshot_key = input("Screenshot keybind (e.g., 'f9', 'ctrl+shift+s', 'alt+4') [f9]: ") or "f9"
-        screenshot_delay = float(input("Delay before screenshot in seconds [0.5]: ") or "0.5")
-        screenshot_pause = float(input("Pause after screenshot in seconds [0.8]: ") or "0.8")
+        screenshot_key = input(f"Screenshot keybind (e.g., 'f9', 'ctrl+shift+s', 'alt+4') [{DEFAULT_SCREENSHOT_KEY}]: ") or DEFAULT_SCREENSHOT_KEY
+        screenshot_delay = float(input(f"Delay before screenshot in seconds [{DEFAULT_SCREENSHOT_DELAY}]: ") or str(DEFAULT_SCREENSHOT_DELAY))
+        screenshot_pause = float(input(f"Pause after screenshot in seconds [{DEFAULT_SCREENSHOT_PAUSE}]: ") or str(DEFAULT_SCREENSHOT_PAUSE))
 
         # Movement configuration
         print("\n--- Movement Settings ---")
-        horizontal_steps = int(input("Horizontal steps for complete rotation [36]: ") or "36")
-        vertical_steps = int(input("Vertical steps from zenith to nadir [18]: ") or "18")
-        horizontal_movement_duration = float(input("Horizontal movement duration in seconds [0.1]: ") or "0.1")
-        vertical_movement_duration = float(input("Vertical movement duration in seconds [0.1]: ") or "0.1")
-        pause_between_moves = float(input("Pause between moves in seconds [0.3]: ") or "0.3")
+        horizontal_steps = int(input(f"Horizontal steps for complete rotation [{DEFAULT_HORIZONTAL_STEPS}]: ") or str(DEFAULT_HORIZONTAL_STEPS))
+        vertical_steps = int(input(f"Vertical steps from zenith to nadir [{DEFAULT_VERTICAL_STEPS}]: ") or str(DEFAULT_VERTICAL_STEPS))
+        horizontal_movement_duration = float(input(f"Horizontal movement duration in seconds [{DEFAULT_HORIZONTAL_MOVEMENT_DURATION}]: ") or str(DEFAULT_HORIZONTAL_MOVEMENT_DURATION))
+        vertical_movement_duration = float(input(f"Vertical movement duration in seconds [{DEFAULT_VERTICAL_MOVEMENT_DURATION}]: ") or str(DEFAULT_VERTICAL_MOVEMENT_DURATION))
+        pause_between_moves = float(input(f"Pause between moves in seconds [{DEFAULT_PAUSE_BETWEEN_MOVES}]: ") or str(DEFAULT_PAUSE_BETWEEN_MOVES))
 
         # Create new configuration structure
         config = {
@@ -490,13 +442,13 @@ class GamePanoCapture:
                 "down": input("Down key [down]: ") or "down"
             }
         elif control_type == "gamepad":
-            stick_movement = input("Stick movement amount (0.1-1.0) [0.8]: ") or "0.8"
+            stick_movement = input(f"Stick movement amount (0.1-1.0) [{DEFAULT_GAMEPAD_STICK_MOVEMENT}]: ") or str(DEFAULT_GAMEPAD_STICK_MOVEMENT)
             config["controls"]["gamepad"] = {
                 "stick_movement_amount": float(stick_movement)
             }
             print("Virtual gamepad support implemented using vgamepad!")
         elif control_type == "mouse":
-            sensitivity = input("Mouse sensitivity in pixels (10-500) [100]: ") or "100"
+            sensitivity = input(f"Mouse sensitivity in pixels (10-500) [{DEFAULT_MOUSE_SENSITIVITY}]: ") or str(DEFAULT_MOUSE_SENSITIVITY)
             capture_mouse = input("Capture mouse during operation? (y/n) [n]: ").lower()
             capture_mouse = capture_mouse == "y"
             config["controls"]["mouse"] = {
@@ -505,10 +457,9 @@ class GamePanoCapture:
             }
             print("Mouse control configured!")
 
-        # Save configuration
-        self.config["games"][game_name] = config
-        with open(self.config_file, 'w') as f:
-            json.dump(self.config, f, indent=4)
+        # Save configuration using config manager
+        self.config_manager.add_game(game_name, config)
+        self.config_manager.save()
 
         print(f"\nConfiguration saved for '{game_name}'!")
         print(f"Screenshot key: {screenshot_key}")
@@ -518,26 +469,26 @@ class GamePanoCapture:
     def test_horizontal_rotation(self, game_name, game_config):
         """Test complete horizontal rotation to verify 360° coverage"""
         movement_config = game_config.get("movement", {})
-        
+
         print(f"\n=== Testing Horizontal Rotation for '{game_name}' ===")
-        print(f"Horizontal steps configured: {movement_config.get('horizontal_steps', 36)}")
-        print(f"Horizontal movement duration: {movement_config.get('horizontal_movement_duration', 0.1)}s")
-        print(f"Pause between moves: {movement_config.get('pause_between_moves', 0.3)}s")
+        print(f"Horizontal steps configured: {movement_config.get('horizontal_steps', DEFAULT_HORIZONTAL_STEPS)}")
+        print(f"Horizontal movement duration: {movement_config.get('horizontal_movement_duration', DEFAULT_HORIZONTAL_MOVEMENT_DURATION)}s")
+        print(f"Pause between moves: {movement_config.get('pause_between_moves', DEFAULT_PAUSE_BETWEEN_MOVES)}s")
         print("\nThis will perform a complete 360° horizontal rotation.")
         print("Watch the camera movement to see if it completes exactly one full rotation.")
         print("If it rotates too much or too little, adjust 'movement.horizontal_steps' in your config.")
 
-        print(f"\nStarting test in 5 seconds...")
+        print(f"\nStarting test in {CAPTURE_COUNTDOWN_SECONDS} seconds...")
         print("Focus the game window now!")
 
-        for i in range(5, 0, -1):
+        for i in range(CAPTURE_COUNTDOWN_SECONDS, 0, -1):
             print(f"{i}...")
             time.sleep(1)
 
         print("\n=== Starting Horizontal Rotation Test ===")
 
         try:
-            horizontal_steps = movement_config.get('horizontal_steps', 36)
+            horizontal_steps = movement_config.get('horizontal_steps', DEFAULT_HORIZONTAL_STEPS)
             for step in range(horizontal_steps):
                 print(f"Step {step + 1}/{horizontal_steps}")
                 self.move_camera("right", game_config)
@@ -554,26 +505,26 @@ class GamePanoCapture:
     def test_vertical_movement(self, game_name, game_config):
         """Test vertical movement from zenith to nadir"""
         movement_config = game_config.get("movement", {})
-        
+
         print(f"\n=== Testing Vertical Movement for '{game_name}' ===")
-        print(f"Vertical steps configured: {movement_config.get('vertical_steps', 18)}")
-        print(f"Vertical movement duration: {movement_config.get('vertical_movement_duration', 0.1)}s")
-        print(f"Pause between moves: {movement_config.get('pause_between_moves', 0.3)}s")
+        print(f"Vertical steps configured: {movement_config.get('vertical_steps', DEFAULT_VERTICAL_STEPS)}")
+        print(f"Vertical movement duration: {movement_config.get('vertical_movement_duration', DEFAULT_VERTICAL_MOVEMENT_DURATION)}s")
+        print(f"Pause between moves: {movement_config.get('pause_between_moves', DEFAULT_PAUSE_BETWEEN_MOVES)}s")
         print("\nThis will move the camera from zenith (straight up) to nadir (straight down).")
         print("Make sure your camera is positioned at zenith before starting!")
         print("Watch to see if it reaches exactly nadir (straight down) at the end.")
 
-        print(f"\nStarting test in 5 seconds...")
+        print(f"\nStarting test in {CAPTURE_COUNTDOWN_SECONDS} seconds...")
         print("Focus the game window and position camera at ZENITH (straight up)!")
 
-        for i in range(5, 0, -1):
+        for i in range(CAPTURE_COUNTDOWN_SECONDS, 0, -1):
             print(f"{i}...")
             time.sleep(1)
 
         print("\n=== Starting Vertical Movement Test ===")
 
         try:
-            vertical_steps = movement_config.get('vertical_steps', 18)
+            vertical_steps = movement_config.get('vertical_steps', DEFAULT_VERTICAL_STEPS)
             for step in range(vertical_steps):
                 print(f"Step {step + 1}/{vertical_steps}")
                 self.move_camera("down", game_config)
@@ -589,25 +540,25 @@ class GamePanoCapture:
 
     def calculate_capture_stats(self, game_name="default"):
         """Calculate and display capture statistics (screenshots count and estimated time)"""
-        if game_name not in self.config["games"]:
+        if not self.config_manager.has_game(game_name):
             print(f"Game '{game_name}' not found in config.")
             return
 
-        game_config = self.config["games"][game_name]
+        game_config = self.config_manager.get_game_config(game_name)
         movement_config = game_config.get("movement", {})
         screenshot_config = game_config.get("screenshot", {})
 
         # Calculate total screenshots
-        horizontal_steps = movement_config.get("horizontal_steps", 36)
-        vertical_steps = movement_config.get("vertical_steps", 18)
+        horizontal_steps = movement_config["horizontal_steps"]
+        vertical_steps = movement_config["vertical_steps"]
         total_screenshots = horizontal_steps * (vertical_steps + 1)
 
         # Calculate timing components (in seconds)
-        horizontal_movement_duration = movement_config.get("horizontal_movement_duration", 0.1)
-        vertical_movement_duration = movement_config.get("vertical_movement_duration", 0.1)
-        pause_between_moves = movement_config.get("pause_between_moves", 0.3)
-        screenshot_delay = screenshot_config.get("delay", 0.5)
-        screenshot_pause = screenshot_config.get("pause", 0.8)
+        horizontal_movement_duration = movement_config.get("horizontal_movement_duration", DEFAULT_HORIZONTAL_MOVEMENT_DURATION)
+        vertical_movement_duration = movement_config.get("vertical_movement_duration", DEFAULT_VERTICAL_MOVEMENT_DURATION)
+        pause_between_moves = movement_config.get("pause_between_moves", DEFAULT_PAUSE_BETWEEN_MOVES)
+        screenshot_delay = screenshot_config.get("delay", DEFAULT_SCREENSHOT_DELAY)
+        screenshot_pause = screenshot_config.get("pause", DEFAULT_SCREENSHOT_PAUSE)
 
         # Time calculations
         # For each screenshot: screenshot_delay + screenshot_pause
@@ -657,28 +608,28 @@ class GamePanoCapture:
 
     def test_screenshot(self, game_name="default"):
         """Test screenshot tool functionality"""
-        if game_name not in self.config["games"]:
+        if not self.config_manager.has_game(game_name):
             print(f"Game '{game_name}' not found in config.")
             return
 
-        game_config = self.config["games"][game_name]
+        game_config = self.config_manager.get_game_config(game_name)
         screenshot_config = game_config.get("screenshot", {})
         screenshot_key = screenshot_config.get("key", "f9")
 
         print(f"\n=== Testing Screenshot Tool for '{game_name}' ===")
         print(f"Screenshot key configured: {screenshot_key}")
-        print(f"Screenshot delay: {screenshot_config.get('delay', 0.5)}s")
-        print(f"Screenshot pause: {screenshot_config.get('pause', 0.8)}s")
+        print(f"Screenshot delay: {screenshot_config.get('delay', DEFAULT_SCREENSHOT_DELAY)}s")
+        print(f"Screenshot pause: {screenshot_config.get('pause', DEFAULT_SCREENSHOT_PAUSE)}s")
         print("\nThis will test your screenshot tool by taking 3 test screenshots.")
         print("Make sure:")
         print("- Your screenshot tool is running and ready")
         print("- The game window is in focus")
         print("- Your screenshot region/settings are configured")
 
-        print(f"\nStarting screenshot test in 5 seconds...")
+        print(f"\nStarting screenshot test in {CAPTURE_COUNTDOWN_SECONDS} seconds...")
         print("Focus the game window now!")
 
-        for i in range(5, 0, -1):
+        for i in range(CAPTURE_COUNTDOWN_SECONDS, 0, -1):
             print(f"{i}...")
             time.sleep(1)
 
@@ -689,7 +640,7 @@ class GamePanoCapture:
                 print(f"Taking test screenshot {test_num}/3...")
 
                 # Take screenshot using configured keybind
-                time.sleep(screenshot_config.get("delay", 0.5))
+                time.sleep(screenshot_config.get("delay", DEFAULT_SCREENSHOT_DELAY))
                 if self.take_screenshot(test_num, game_config):
                     print(f"✓ Screenshot {test_num} triggered successfully")
                 else:
@@ -712,11 +663,11 @@ class GamePanoCapture:
 
     def test_movement(self, game_name="default", test_type="horizontal"):
         """Test camera movement patterns for fine-tuning"""
-        if game_name not in self.config["games"]:
+        if not self.config_manager.has_game(game_name):
             print(f"Game '{game_name}' not found in config.")
             return
 
-        game_config = self.config["games"][game_name]
+        game_config = self.config_manager.get_game_config(game_name)
 
         if test_type == "horizontal":
             self.test_horizontal_rotation(game_name, game_config)
@@ -754,7 +705,7 @@ def main():
         capturer.calculate_capture_stats(args.calculate)
     elif args.list:
         print("Configured games:")
-        for game in capturer.config["games"]:
+        for game in capturer.config_manager.list_games():
             print(f"  - {game}")
     else:
         print("360° Game Screenshot Automation")
