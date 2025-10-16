@@ -6,5 +6,6 @@ including keyboard, mouse, and gamepad controls with a unified interface.
 """
 
 from .keyboard import KeyboardFactory
+from .mouse import MouseFactory
 
-__all__ = ['KeyboardFactory']
+__all__ = ['KeyboardFactory', 'MouseFactory']

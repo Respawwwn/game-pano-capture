@@ -13,7 +13,7 @@ keyboard>=0.13.0
 # Platform-specific dependencies
 # ===============================
 
-# macOS: Native keyboard support via Core Graphics/Quartz (optimal performance)
+# macOS: Native keyboard and mouse support via Core Graphics/Quartz (optimal performance)
 pyobjc-framework-Quartz>=10.0; sys_platform == "darwin"
 
 # Windows: Virtual gamepad simulation
@@ -27,9 +27,9 @@ pywin32>=306; sys_platform == "win32"
 # Notes by platform:
 # ===================
 # macOS: 
-#   - pyobjc-framework-Quartz provides native key support (including 'k', 'j', etc.)
+#   - pyobjc-framework-Quartz provides native key and mouse support (including 'k', 'j', etc.)
 #   - Fallback to keyboard library if Quartz not available
-#   - Mouse control via pygame
+#   - Native mouse control via Quartz Core Graphics
 #   - No gamepad support
 #
 # Windows:
@@ -39,7 +39,7 @@ pywin32>=306; sys_platform == "win32"
 #
 # Linux:
 #   - keyboard library (may require sudo for some operations)
-#   - Mouse control via pygame  
+#   - Mouse control via pygame (fallback implementation)
 #   - No gamepad support
 #
 # Standard library modules (included with Python):

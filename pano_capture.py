@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 import argparse
 import pygame
-from control import KeyboardFactory
+from control import KeyboardFactory, MouseFactory
 from core import ConfigManager, ConfigDefaults
 from core.constants import (
     DEFAULT_HORIZONTAL_STEPS, DEFAULT_VERTICAL_STEPS,
@@ -40,6 +40,9 @@ class GamePanoCapture:
 
         # Initialize platform-specific keyboard handler
         self.keyboard_handler = KeyboardFactory.create_handler()
+        
+        # Initialize platform-specific mouse handler
+        self.mouse_handler = MouseFactory.create_handler()
 
     def setup_output_directory(self, game_name="capture"):
         """Create output directory for session info"""
@@ -93,12 +96,11 @@ class GamePanoCapture:
             print("IMPORTANT: Make sure the game window is in focus when testing!")
             print("The mouse will send relative movements to the active window.")
 
-            # Initialize pygame for mouse events (but don't capture)
-            if not self.pygame_initialized:
-                pygame.init()
-                self.pygame_initialized = True
-                print("Pygame initialized for mouse control")
+            if not self.mouse_handler.is_available():
+                print(f"Error: Mouse handler not available on {self.mouse_handler.get_platform_name()}")
+                return False
 
+            print(f"Mouse control initialized for {self.mouse_handler.get_platform_name()}")
             self.mouse_initialized = True
             return True
 
@@ -221,68 +223,24 @@ class GamePanoCapture:
                 print(f"Unknown direction: {direction}")
                 return
 
-            # Simulate relative mouse movement
+            # Use platform-specific mouse handler for relative movement
             try:
                 print(f"Moving mouse: {direction} (relative x={mouse_x}, y={mouse_y})")
-
-                # Use platform-specific relative mouse movement
-                if platform.system() == "Windows":
-                    # Use win32api for Windows relative movement
-                    try:
-                        import win32api, win32con
-                        # Send relative mouse movement using SendInput-like approach
-                        # This simulates actual mouse movement that games can detect
-
-                        # Method 1: Try relative mouse_event (deprecated but works)
-                        win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, mouse_x, mouse_y, 0, 0)
-                        print(f"Windows: Sent relative mouse movement (dx={mouse_x}, dy={mouse_y})")
-
-                    except ImportError:
-                        print("win32api not available - mouse movement may not work in games")
-                        print("Install pywin32 with: pip install pywin32")
-                        # Fallback to absolute positioning (won't work in most games)
-                        current_pos = pygame.mouse.get_pos()
-                        new_x = current_pos[0] + mouse_x
-                        new_y = current_pos[1] + mouse_y
-                        pygame.mouse.set_pos((new_x, new_y))
-                        print(f"Pygame fallback: Moved mouse from {current_pos} to ({new_x}, {new_y})")
-
-                    except Exception as e:
-                        print(f"Windows mouse error: {e}")
-                        print("Trying alternative method...")
-                        # Try alternative win32 method
-                        try:
-                            import win32gui
-                            # Get current cursor position and move relatively
-                            current_x, current_y = win32api.GetCursorPos()
-                            new_x = current_x + mouse_x
-                            new_y = current_y + mouse_y
-                            win32api.SetCursorPos((new_x, new_y))
-                            print(f"Windows absolute: Moved from ({current_x}, {current_y}) to ({new_x}, {new_y})")
-                        except:
-                            print("All Windows mouse methods failed")
+                
+                success = self.mouse_handler.move_relative(mouse_x, mouse_y)
+                if success:
+                    print(f"Successfully moved mouse by ({mouse_x}, {mouse_y})")
+                    # Hold the movement for the specified duration
+                    time.sleep(movement_duration)
                 else:
-                    # For non-Windows platforms, use pygame
-                    print("Non-Windows platform: Using pygame mouse control")
-                    current_pos = pygame.mouse.get_pos()
-                    new_x = current_pos[0] + mouse_x
-                    new_y = current_pos[1] + mouse_y
-                    pygame.mouse.set_pos((new_x, new_y))
-                    print(f"Pygame: Moved mouse from {current_pos} to ({new_x}, {new_y})")
-
-                # Hold the movement for the specified duration
-                time.sleep(movement_duration)
-
-                # Process any pygame events
-                if self.pygame_initialized:
-                    pygame.event.pump()
+                    print("Failed to move mouse - check handler availability")
 
             except Exception as e:
                 print(f"Error moving mouse: {e}")
-                print(f"Platform: {platform.system()}")
+                print(f"Platform: {self.mouse_handler.get_platform_name()}")
                 print("Mouse control troubleshooting:")
                 print("1. Make sure the game window is in focus")
-                print("2. On Windows, install pywin32: pip install pywin32")
+                print("2. Check platform-specific dependencies")
                 print("3. Some games may not respond to programmatic mouse input")
                 print("4. Try increasing mouse sensitivity in the config")
 
