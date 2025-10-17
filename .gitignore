@@ -39,3 +39,6 @@ wheels/
 
 # Logs
 *.log
+
+# Ruff cache
+.ruff_cache/

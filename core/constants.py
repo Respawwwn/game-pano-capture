@@ -36,6 +36,7 @@ SUPPORTED_CONTROL_TYPES = ["keyboard", "gamepad", "mouse"]
 CAPTURE_COUNTDOWN_SECONDS = 5
 MAX_CONFIG_LOAD_RETRIES = 3
 
+
 class ConfigDefaults:
     """
     Centralized access to all default configuration values.
@@ -51,7 +52,7 @@ class ConfigDefaults:
             "vertical_steps": DEFAULT_VERTICAL_STEPS,
             "horizontal_movement_duration": DEFAULT_HORIZONTAL_MOVEMENT_DURATION,
             "vertical_movement_duration": DEFAULT_VERTICAL_MOVEMENT_DURATION,
-            "pause_between_moves": DEFAULT_PAUSE_BETWEEN_MOVES
+            "pause_between_moves": DEFAULT_PAUSE_BETWEEN_MOVES,
         }
 
     @staticmethod
@@ -60,7 +61,7 @@ class ConfigDefaults:
         return {
             "key": DEFAULT_SCREENSHOT_KEY,
             "delay": DEFAULT_SCREENSHOT_DELAY,
-            "pause": DEFAULT_SCREENSHOT_PAUSE
+            "pause": DEFAULT_SCREENSHOT_PAUSE,
         }
 
     @staticmethod
@@ -70,22 +71,20 @@ class ConfigDefaults:
             "left": DEFAULT_KEY_LEFT,
             "right": DEFAULT_KEY_RIGHT,
             "up": DEFAULT_KEY_UP,
-            "down": DEFAULT_KEY_DOWN
+            "down": DEFAULT_KEY_DOWN,
         }
 
     @staticmethod
     def get_gamepad_defaults():
         """Get default gamepad control configuration."""
-        return {
-            "stick_movement_amount": DEFAULT_GAMEPAD_STICK_MOVEMENT
-        }
+        return {"stick_movement_amount": DEFAULT_GAMEPAD_STICK_MOVEMENT}
 
     @staticmethod
     def get_mouse_defaults():
         """Get default mouse control configuration."""
         return {
             "sensitivity": DEFAULT_MOUSE_SENSITIVITY,
-            "capture_mouse": DEFAULT_MOUSE_CAPTURE
+            "capture_mouse": DEFAULT_MOUSE_CAPTURE,
         }
 
     @staticmethod
@@ -94,5 +93,5 @@ class ConfigDefaults:
         return {
             "keyboard": ConfigDefaults.get_keyboard_defaults(),
             "gamepad": ConfigDefaults.get_gamepad_defaults(),
-            "mouse": ConfigDefaults.get_mouse_defaults()
+            "mouse": ConfigDefaults.get_mouse_defaults(),
         }

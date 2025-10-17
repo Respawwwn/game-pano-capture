@@ -8,4 +8,4 @@ utilities, and common interfaces used throughout the application.
 from .config_manager import ConfigManager
 from .constants import ConfigDefaults
 
-__all__ = ['ConfigManager', 'ConfigDefaults']
+__all__ = ["ConfigManager", "ConfigDefaults"]
