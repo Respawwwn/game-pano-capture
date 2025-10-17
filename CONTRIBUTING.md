@@ -42,6 +42,21 @@ Clone the repository and set up the development environment:
 
 ## 🏆 Tests
 
+We use pytest for testing to ensure code quality and prevent regressions.
+
+### Running Tests
+
+Run the test suite with coverage reporting:
+
+```bash
+# Run all tests with coverage
+pytest
+```
+
+### Coverage Reports
+
+After running tests with coverage, you can view the HTML report by opening `htmlcov/index.html` in your browser.
+
 ## 🚔 Check Python coding standards & best practices
 
 During development, we use Ruff for linting and formatting to maintain code quality.

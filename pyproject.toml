@@ -80,3 +80,10 @@ line-ending = "auto"
 
 [tool.ruff.lint.isort]
 known-first-party = ["control", "core", "commands"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--cov=control --cov=core --cov-report=html --cov-report=term"
