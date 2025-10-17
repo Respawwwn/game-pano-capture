@@ -22,89 +22,34 @@ from core.constants import (
 )
 
 class GamePanoCapture:
-    def __init__(self, config_file="game_config.json"):
+    def __init__(self, config_file="game_config.json", debug=False):
         # Initialize configuration manager
         self.config_manager = ConfigManager(config_file)
         self.config = self.config_manager.load()
 
         self.screenshot_count = 0
-        self.output_dir = None
+        self.debug_output_dir = None
+        self.debug = debug
 
         # Initialize platform-specific keyboard handler
         self.keyboard_handler = KeyboardFactory.create_handler()
 
         # Initialize platform-specific mouse handler
         self.mouse_handler = MouseFactory.create_handler()
-        self.mouse_initialized = False
 
         # Initialize platform-specific gamepad handler
         self.gamepad_handler = GamepadFactory.create_handler()
-        self.gamepad_initialized = False
 
-    def setup_output_directory(self, game_name="capture"):
-        """Create output directory for session info"""
+    def setup_debug_output_directory(self, game_name="capture"):
+        """Create debug output directory for session info (only if debug enabled)"""
+        if not self.debug:
+            return
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.output_dir = Path(f"captures/panorama_capture_{game_name}_{timestamp}")
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        print(f"Session info will be saved to: {self.output_dir}")
+        self.debug_output_dir = Path(f"captures/panorama_capture_{game_name}_{timestamp}")
+        self.debug_output_dir.mkdir(parents=True, exist_ok=True)
+        print(f"Debug mode: Session info will be saved to: {self.debug_output_dir}")
 
-    def init_gamepad(self, game_config):
-        """Initialize gamepad if needed"""
-        if game_config["control_type"] != "gamepad":
-            return True
-
-        if self.gamepad_initialized:
-            return True
-
-        try:
-            print("Initializing gamepad control...")
-
-            if not self.gamepad_handler.is_available():
-                print(f"Error: Gamepad handler not available on {self.gamepad_handler.get_platform_name()}")
-                return False
-
-            success = self.gamepad_handler.initialize()
-            if success:
-                print(f"Gamepad control initialized for {self.gamepad_handler.get_platform_name()}")
-                self.gamepad_initialized = True
-                return True
-            else:
-                print("Failed to initialize gamepad control")
-                return False
-
-        except NotImplementedError as e:
-            print(f"Error: {e}")
-            print(f"Gamepad support is not available on {self.gamepad_handler.get_platform_name()}")
-            print("Please use keyboard or mouse control types on this platform")
-            return False
-        except Exception as e:
-            print(f"Error initializing gamepad: {e}")
-            return False
-
-    def init_mouse(self, game_config):
-        """Initialize mouse control if needed"""
-        if game_config["control_type"] != "mouse":
-            return True
-
-        if self.mouse_initialized:
-            return True
-
-        try:
-            print("Initializing mouse control...")
-            print("IMPORTANT: Make sure the game window is in focus when testing!")
-            print("The mouse will send relative movements to the active window.")
-
-            if not self.mouse_handler.is_available():
-                print(f"Error: Mouse handler not available on {self.mouse_handler.get_platform_name()}")
-                return False
-
-            print(f"Mouse control initialized for {self.mouse_handler.get_platform_name()}")
-            self.mouse_initialized = True
-            return True
-
-        except Exception as e:
-            print(f"Error initializing mouse control: {e}")
-            return False
 
     def take_screenshot(self, screenshot_number, game_config):
         """Trigger screenshot using configured keybind"""
@@ -148,8 +93,17 @@ class GamePanoCapture:
             if not success:
                 return
         elif game_config["control_type"] == "gamepad":
-            if not self.init_gamepad(game_config):
-                print("Error: Could not initialize gamepad")
+            # Initialize gamepad handler
+            try:
+                if not self.gamepad_handler.is_available():
+                    print(f"Error: Gamepad handler not available on {self.gamepad_handler.get_platform_name()}")
+                    return
+
+                if not self.gamepad_handler.initialize():
+                    print("Error: Failed to initialize gamepad control")
+                    return
+            except Exception as e:
+                print(f"Error initializing gamepad: {e}")
                 return
 
             # Get movement amount from config
@@ -193,8 +147,14 @@ class GamePanoCapture:
                 print("3. Ensure vgamepad is installed on Windows")
 
         elif game_config["control_type"] == "mouse":
-            if not self.init_mouse(game_config):
-                print("Error: Could not initialize mouse control")
+            # Initialize mouse handler
+            try:
+                if not self.mouse_handler.is_available():
+                    print(f"Error: Mouse handler not available on {self.mouse_handler.get_platform_name()}")
+                    return
+
+            except Exception as e:
+                print(f"Error initializing mouse control: {e}")
                 return
 
             # Get mouse movement amount from config
@@ -250,16 +210,6 @@ class GamePanoCapture:
 
         game_config = self.config_manager.get_game_config(game_name)
 
-        # Initialize control system if needed
-        if game_config["control_type"] == "gamepad":
-            if not self.init_gamepad(game_config):
-                print("Failed to initialize gamepad. Aborting capture.")
-                return
-        elif game_config["control_type"] == "mouse":
-            if not self.init_mouse(game_config):
-                print("Failed to initialize mouse control. Aborting capture.")
-                return
-
         # Get configuration sections
         movement_config = game_config["movement"]
         screenshot_config = game_config["screenshot"]
@@ -281,7 +231,7 @@ class GamePanoCapture:
             print(f"{i}...")
             time.sleep(1)
 
-        self.setup_output_directory(game_name)
+        self.setup_debug_output_directory(game_name)
         self.screenshot_count = 0
 
         try:
@@ -311,36 +261,38 @@ class GamePanoCapture:
             print(f"\n=== Capture Complete ===")
             print(f"Total screenshots taken: {self.screenshot_count}")
             print(f"Check your screenshot tool's output folder for the images")
-            print(f"Session info saved to: {self.output_dir}")
 
-            # Save session info
-            session_info = {
-                "game": game_name,
-                "timestamp": datetime.now().isoformat(),
-                "screenshots_taken": self.screenshot_count,
-                "config_used": game_config,
-                "expected_screenshots": horizontal_steps * (vertical_steps + 1),
-                "capture_pattern": "spherical_zenith_to_nadir"
-            }
-            with open(self.output_dir / "session_info.json", 'w') as f:
-                json.dump(session_info, f, indent=4)
+            # Save session info (only in debug mode)
+            if self.debug and self.debug_output_dir:
+                print(f"Debug mode: Session info saved to: {self.debug_output_dir}")
+                session_info = {
+                    "game": game_name,
+                    "timestamp": datetime.now().isoformat(),
+                    "screenshots_taken": self.screenshot_count,
+                    "config_used": game_config,
+                    "expected_screenshots": horizontal_steps * (vertical_steps + 1),
+                    "capture_pattern": "spherical_zenith_to_nadir"
+                }
+                with open(self.debug_output_dir / "session_info.json", 'w') as f:
+                    json.dump(session_info, f, indent=4)
 
         except KeyboardInterrupt:
             print(f"\n=== Capture Interrupted ===")
             print(f"Screenshots taken: {self.screenshot_count}")
-            print(f"Partial capture info saved to: {self.output_dir}")
 
-            # Save partial session info
-            session_info = {
-                "game": game_name,
-                "timestamp": datetime.now().isoformat(),
-                "screenshots_taken": self.screenshot_count,
-                "config_used": game_config,
-                "status": "interrupted",
-                "expected_screenshots": horizontal_steps * (vertical_steps + 1)
-            }
-            with open(self.output_dir / "session_info.json", 'w') as f:
-                json.dump(session_info, f, indent=4)
+            # Save partial session info (only in debug mode)
+            if self.debug and self.debug_output_dir:
+                print(f"Debug mode: Partial capture info saved to: {self.debug_output_dir}")
+                session_info = {
+                    "game": game_name,
+                    "timestamp": datetime.now().isoformat(),
+                    "screenshots_taken": self.screenshot_count,
+                    "config_used": game_config,
+                    "status": "interrupted",
+                    "expected_screenshots": horizontal_steps * (vertical_steps + 1)
+                }
+                with open(self.debug_output_dir / "session_info.json", 'w') as f:
+                    json.dump(session_info, f, indent=4)
 
     def create_game_config(self, game_name):
         """Interactive setup for a new game configuration"""
@@ -639,10 +591,11 @@ def main():
     parser.add_argument("--test-screenshot", help="Test screenshot tool functionality for specified game")
     parser.add_argument("--calculate", help="Calculate and display capture statistics for specified game")
     parser.add_argument("--list", action="store_true", help="List configured games")
+    parser.add_argument("--debug", action="store_true", help="Enable debug mode (saves capture session info to captures folder)")
 
     args = parser.parse_args()
 
-    capturer = GamePanoCapture()
+    capturer = GamePanoCapture(debug=args.debug)
 
     if args.setup:
         capturer.create_game_config(args.setup)
