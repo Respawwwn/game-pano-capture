@@ -16,7 +16,7 @@ keyboard>=0.13.0
 # macOS: Native keyboard and mouse support via Core Graphics/Quartz (optimal performance)
 pyobjc-framework-Quartz>=10.0; sys_platform == "darwin"
 
-# Windows: Virtual gamepad simulation
+# Windows: Virtual gamepad simulation (Xbox 360 controller)
 vgamepad>=0.0.8; sys_platform == "win32"
 
 # Windows: Mouse control and system integration
@@ -34,7 +34,7 @@ pywin32>=306; sys_platform == "win32"
 #
 # Windows:
 #   - Full feature support: keyboard, mouse, virtual gamepad
-#   - vgamepad enables Xbox 360 controller simulation
+#   - vgamepad enables Xbox 360 controller simulation for game control
 #   - pywin32 provides advanced mouse control
 #
 # Linux:

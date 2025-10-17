@@ -6,14 +6,11 @@ Uses configurable keybinds to trigger external screenshot tools.
 """
 
 import time
-import os
 import json
-import platform
 from datetime import datetime
 from pathlib import Path
 import argparse
-import pygame
-from control import KeyboardFactory, MouseFactory
+from control import KeyboardFactory, MouseFactory, GamepadFactory
 from core import ConfigManager, ConfigDefaults
 from core.constants import (
     DEFAULT_HORIZONTAL_STEPS, DEFAULT_VERTICAL_STEPS,
@@ -32,17 +29,17 @@ class GamePanoCapture:
 
         self.screenshot_count = 0
         self.output_dir = None
-        self.gamepad = None
-        self.gamepad_initialized = False
-        self.virtual_gamepad = None
-        self.pygame_initialized = False
-        self.mouse_initialized = False
 
         # Initialize platform-specific keyboard handler
         self.keyboard_handler = KeyboardFactory.create_handler()
-        
+
         # Initialize platform-specific mouse handler
         self.mouse_handler = MouseFactory.create_handler()
+        self.mouse_initialized = False
+
+        # Initialize platform-specific gamepad handler
+        self.gamepad_handler = GamepadFactory.create_handler()
+        self.gamepad_initialized = False
 
     def setup_output_directory(self, game_name="capture"):
         """Create output directory for session info"""
@@ -52,35 +49,36 @@ class GamePanoCapture:
         print(f"Session info will be saved to: {self.output_dir}")
 
     def init_gamepad(self, game_config):
-        """Initialize virtual gamepad if needed"""
+        """Initialize gamepad if needed"""
         if game_config["control_type"] != "gamepad":
             return True
 
         if self.gamepad_initialized:
             return True
 
-        # Check if we're on Windows
-        if platform.system() != "Windows":
-            print("Error: Virtual gamepad support (vgamepad) is only available on Windows")
-            print("On non-Windows platforms, please use keyboard or mouse control types")
-            return False
-
         try:
-            # Import vgamepad only on Windows
-            import vgamepad as vg
-            # Create virtual Xbox 360 gamepad
-            self.virtual_gamepad = vg.VX360Gamepad()
-            print("Virtual Xbox 360 gamepad created successfully")
-            self.gamepad_initialized = True
-            return True
+            print("Initializing gamepad control...")
 
-        except ImportError:
-            print("Error: vgamepad not available - gamepad support requires vgamepad package")
-            print("Install vgamepad with: pip install vgamepad")
-            print("Note: vgamepad only works on Windows")
+            if not self.gamepad_handler.is_available():
+                print(f"Error: Gamepad handler not available on {self.gamepad_handler.get_platform_name()}")
+                return False
+
+            success = self.gamepad_handler.initialize()
+            if success:
+                print(f"Gamepad control initialized for {self.gamepad_handler.get_platform_name()}")
+                self.gamepad_initialized = True
+                return True
+            else:
+                print("Failed to initialize gamepad control")
+                return False
+
+        except NotImplementedError as e:
+            print(f"Error: {e}")
+            print(f"Gamepad support is not available on {self.gamepad_handler.get_platform_name()}")
+            print("Please use keyboard or mouse control types on this platform")
             return False
         except Exception as e:
-            print(f"Error initializing virtual gamepad: {e}")
+            print(f"Error initializing gamepad: {e}")
             return False
 
     def init_mouse(self, game_config):
@@ -176,26 +174,23 @@ class GamePanoCapture:
                 print(f"Unknown direction: {direction}")
                 return
 
-            # Simulate right stick movement using vgamepad
+            # Use platform-specific gamepad handler for stick movement
             try:
-                print(f"Moving virtual gamepad right stick: {direction} (x={x_axis:.1f}, y={y_axis:.1f})")
+                print(f"Moving gamepad right stick: {direction} (x={x_axis:.1f}, y={y_axis:.1f})")
 
-                if self.virtual_gamepad:
-                    # Set right stick position using vgamepad
-                    self.virtual_gamepad.right_joystick_float(x_value_float=x_axis, y_value_float=y_axis)
-                    self.virtual_gamepad.update()
-
-                    # Hold the movement for the specified duration
-                    time.sleep(movement_duration)
-
-                    # Release the stick (return to center)
-                    self.virtual_gamepad.right_joystick_float(x_value_float=0.0, y_value_float=0.0)
-                    self.virtual_gamepad.update()
+                success = self.gamepad_handler.move_stick("right", x_axis, y_axis, movement_duration)
+                if success:
+                    print(f"Successfully moved gamepad stick to ({x_axis:.1f}, {y_axis:.1f})")
                 else:
-                    print("Error: Virtual gamepad not initialized")
+                    print("Failed to move gamepad stick - check handler availability")
 
             except Exception as e:
-                print(f"Error moving virtual gamepad stick: {e}")
+                print(f"Error moving gamepad stick: {e}")
+                print(f"Platform: {self.gamepad_handler.get_platform_name()}")
+                print("Gamepad control troubleshooting:")
+                print("1. Make sure gamepad is properly initialized")
+                print("2. Check platform-specific dependencies")
+                print("3. Ensure vgamepad is installed on Windows")
 
         elif game_config["control_type"] == "mouse":
             if not self.init_mouse(game_config):
@@ -226,7 +221,7 @@ class GamePanoCapture:
             # Use platform-specific mouse handler for relative movement
             try:
                 print(f"Moving mouse: {direction} (relative x={mouse_x}, y={mouse_y})")
-                
+
                 success = self.mouse_handler.move_relative(mouse_x, mouse_y)
                 if success:
                     print(f"Successfully moved mouse by ({mouse_x}, {mouse_y})")
