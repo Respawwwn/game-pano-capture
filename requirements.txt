@@ -1,21 +1,46 @@
 # 360° Game Screenshot Automation - Required Dependencies
+# Install with: pip install -r requirements.txt
 
-# Keyboard input simulation and monitoring
-keyboard>=0.13.0
+# Core dependencies (all platforms)
+# ===================================
 
 # Gamepad support for camera control
 pygame>=2.5.0
 
-# Windows virtual gamepad simulation
+# Generic keyboard library (all platforms, fallback for macOS)
+keyboard>=0.13.0
+
+# Platform-specific dependencies
+# ===============================
+
+# macOS: Native keyboard and mouse support via Core Graphics/Quartz (optimal performance)
+pyobjc-framework-Quartz>=10.0; sys_platform == "darwin"
+
+# Windows: Virtual gamepad simulation (Xbox 360 controller)
 vgamepad>=0.0.8; sys_platform == "win32"
 
-# Windows mouse control (Windows only)
+# Windows: Mouse control and system integration
 pywin32>=306; sys_platform == "win32"
 
+# Linux: No additional dependencies needed beyond core ones
+
+# Notes by platform:
+# ===================
+# macOS: 
+#   - pyobjc-framework-Quartz provides native key and mouse support (including 'k', 'j', etc.)
+#   - Fallback to keyboard library if Quartz not available
+#   - Native mouse control via Quartz Core Graphics
+#   - No gamepad support
+#
+# Windows:
+#   - Full feature support: keyboard, mouse, virtual gamepad
+#   - vgamepad enables Xbox 360 controller simulation for game control
+#   - pywin32 provides advanced mouse control
+#
+# Linux:
+#   - keyboard library (may require sudo for some operations)
+#   - Mouse control via pygame (fallback implementation)
+#   - No gamepad support
+#
 # Standard library modules (included with Python):
-# - time
-# - os
-# - json
-# - datetime
-# - pathlib
-# - argparse
+# - time, os, json, datetime, pathlib, argparse, platform, abc, typing
