@@ -39,3 +39,13 @@ wheels/
 
 # Logs
 *.log
+
+# Ruff cache
+.ruff_cache/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/

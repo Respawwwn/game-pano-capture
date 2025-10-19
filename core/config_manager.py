@@ -6,9 +6,9 @@ configuration data to JSON files with proper error handling and validation.
 """
 
 import json
-import os
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
+
 
 class ConfigManager:
     """
@@ -38,10 +38,10 @@ class ConfigManager:
         """
         if self.config_file.exists():
             try:
-                with open(self.config_file, 'r', encoding='utf-8') as f:
+                with open(self.config_file, encoding="utf-8") as f:
                     self._config_data = json.load(f)
                 print(f"Configuration loaded from: {self.config_file}")
-            except (json.JSONDecodeError, IOError) as e:
+            except (OSError, json.JSONDecodeError) as e:
                 print(f"Error reading config file: {e}")
                 print("Using default configuration.")
                 self._config_data = self._default_config.copy()
@@ -64,11 +64,11 @@ class ConfigManager:
             # Ensure parent directory exists
             self.config_file.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(self.config_file, 'w', encoding='utf-8') as f:
+            with open(self.config_file, "w", encoding="utf-8") as f:
                 json.dump(self._config_data, f, indent=4, ensure_ascii=False)
             print(f"Configuration saved to: {self.config_file}")
             return True
-        except (IOError, OSError) as e:
+        except OSError as e:
             print(f"Error saving config file: {e}")
             return False
 
@@ -90,7 +90,7 @@ class ConfigManager:
         """
         try:
             current = self._config_data
-            for key in key_path.split('.'):
+            for key in key_path.split("."):
                 current = current[key]
             return current
         except (KeyError, TypeError):
@@ -217,13 +217,22 @@ class ConfigManager:
             Default configuration dictionary
         """
         from .constants import (
-            DEFAULT_HORIZONTAL_STEPS, DEFAULT_VERTICAL_STEPS,
-            DEFAULT_HORIZONTAL_MOVEMENT_DURATION, DEFAULT_VERTICAL_MOVEMENT_DURATION,
-            DEFAULT_PAUSE_BETWEEN_MOVES, DEFAULT_SCREENSHOT_KEY,
-            DEFAULT_SCREENSHOT_DELAY, DEFAULT_SCREENSHOT_PAUSE,
-            DEFAULT_GAMEPAD_STICK_MOVEMENT, DEFAULT_MOUSE_SENSITIVITY,
-            DEFAULT_MOUSE_CAPTURE, DEFAULT_KEY_LEFT, DEFAULT_KEY_RIGHT,
-            DEFAULT_KEY_UP, DEFAULT_KEY_DOWN, DEFAULT_CONFIG_VERSION
+            DEFAULT_CONFIG_VERSION,
+            DEFAULT_GAMEPAD_STICK_MOVEMENT,
+            DEFAULT_HORIZONTAL_MOVEMENT_DURATION,
+            DEFAULT_HORIZONTAL_STEPS,
+            DEFAULT_KEY_DOWN,
+            DEFAULT_KEY_LEFT,
+            DEFAULT_KEY_RIGHT,
+            DEFAULT_KEY_UP,
+            DEFAULT_MOUSE_CAPTURE,
+            DEFAULT_MOUSE_SENSITIVITY,
+            DEFAULT_PAUSE_BETWEEN_MOVES,
+            DEFAULT_SCREENSHOT_DELAY,
+            DEFAULT_SCREENSHOT_KEY,
+            DEFAULT_SCREENSHOT_PAUSE,
+            DEFAULT_VERTICAL_MOVEMENT_DURATION,
+            DEFAULT_VERTICAL_STEPS,
         )
 
         return {
@@ -235,28 +244,28 @@ class ConfigManager:
                     "vertical_steps": DEFAULT_VERTICAL_STEPS,
                     "horizontal_movement_duration": DEFAULT_HORIZONTAL_MOVEMENT_DURATION,
                     "vertical_movement_duration": DEFAULT_VERTICAL_MOVEMENT_DURATION,
-                    "pause_between_moves": DEFAULT_PAUSE_BETWEEN_MOVES
+                    "pause_between_moves": DEFAULT_PAUSE_BETWEEN_MOVES,
                 },
                 "screenshot": {
                     "key": DEFAULT_SCREENSHOT_KEY,
                     "delay": DEFAULT_SCREENSHOT_DELAY,
-                    "pause": DEFAULT_SCREENSHOT_PAUSE
+                    "pause": DEFAULT_SCREENSHOT_PAUSE,
                 },
                 "controls": {
                     "keyboard": {
                         "left": DEFAULT_KEY_LEFT,
                         "right": DEFAULT_KEY_RIGHT,
                         "up": DEFAULT_KEY_UP,
-                        "down": DEFAULT_KEY_DOWN
+                        "down": DEFAULT_KEY_DOWN,
                     },
                     "gamepad": {
                         "stick_movement_amount": DEFAULT_GAMEPAD_STICK_MOVEMENT
                     },
                     "mouse": {
                         "sensitivity": DEFAULT_MOUSE_SENSITIVITY,
-                        "capture_mouse": DEFAULT_MOUSE_CAPTURE
-                    }
-                }
+                        "capture_mouse": DEFAULT_MOUSE_CAPTURE,
+                    },
+                },
             },
             "games": {
                 "default": {
@@ -267,23 +276,23 @@ class ConfigManager:
                         "vertical_steps": DEFAULT_VERTICAL_STEPS,
                         "horizontal_movement_duration": DEFAULT_HORIZONTAL_MOVEMENT_DURATION,
                         "vertical_movement_duration": DEFAULT_VERTICAL_MOVEMENT_DURATION,
-                        "pause_between_moves": DEFAULT_PAUSE_BETWEEN_MOVES
+                        "pause_between_moves": DEFAULT_PAUSE_BETWEEN_MOVES,
                     },
                     "screenshot": {
                         "key": DEFAULT_SCREENSHOT_KEY,
                         "delay": DEFAULT_SCREENSHOT_DELAY,
-                        "pause": DEFAULT_SCREENSHOT_PAUSE
+                        "pause": DEFAULT_SCREENSHOT_PAUSE,
                     },
                     "controls": {
                         "keyboard": {
                             "left": DEFAULT_KEY_LEFT,
                             "right": DEFAULT_KEY_RIGHT,
                             "up": DEFAULT_KEY_UP,
-                            "down": DEFAULT_KEY_DOWN
+                            "down": DEFAULT_KEY_DOWN,
                         }
-                    }
+                    },
                 }
-            }
+            },
         }
 
     def __repr__(self) -> str:
