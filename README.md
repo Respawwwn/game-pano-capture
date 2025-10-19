@@ -11,15 +11,12 @@ It systematically moves the camera in a spherical pattern and triggers your scre
 - **Multiple control support**: Works with keyboard, gamepad (Xbox controller), or mouse controls
 - **Custom screenshot integration**: Uses your preferred screenshot tool via configurable keybinds
 - **Spherical capture pattern**: Follows proper panoramic photography patterns from zenith to nadir
-- **Resume capability**: Can be interrupted and provides partial capture information
-- **Movement testing**: Test camera movement and screenshot triggers before full capture
-- **Separate horizontal/vertical timing**: Independent movement durations for precise control
 
 ## Prerequisites
 
 - Python 3.7 or higher
 - A screenshot/region capture tool (e.g., ShareX, Greenshot, etc.)
-- Video games with photo mode capability
+- Video games with photo mode or freecam capabilities
 
 ## Getting Started
 
@@ -151,7 +148,15 @@ python pano_capture.py --capture "Cyberpunk 2077"
 - `controls.mouse.sensitivity`: Mouse movement pixels (10-500)
 - `controls.mouse.capture_mouse`: Whether to capture mouse during operation
 
-### Example Configurations
+### Advanced Configuration
+
+#### Custom Key Bindings
+
+The script supports various key formats:
+- Simple keys: `f9`, `space`, `enter`
+- Arrow keys: `left`, `right`, `up`, `down`
+- Letter keys: `w`, `a`, `s`, `d`
+- Key combinations: `ctrl+shift+s`, `alt+f12`
 
 #### Keyboard Control
 ```json
@@ -184,16 +189,6 @@ python pano_capture.py --capture "Cyberpunk 2077"
   }
 }
 ```
-
-### Advanced Configuration
-
-#### Custom Key Bindings
-
-The script supports various key formats:
-- Simple keys: `f9`, `space`, `enter`
-- Arrow keys: `left`, `right`, `up`, `down`
-- Letter keys: `w`, `a`, `s`, `d`
-- Key combinations: `ctrl+shift+s`, `alt+f12`
 
 #### Gamepad Configuration
 
@@ -308,17 +303,11 @@ python pano_capture.py --list
 - **Missing coverage areas**: Increase `horizontal_steps` or `vertical_steps` to have overlapping shots
 - **Inconsistent movement**: Some games may need longer delays or different key mappings
 
-### Mouse Support
-
-For mouse control on Windows, the script uses `pywin32` for optimal mouse movement:
-**Note**: On Windows, `pywin32` is automatically installed via `requirements.txt` for better mouse control.
-
 ### Gamepad Support
 
-For gamepad control on Windows, the script uses `vgamepad` to create a virtual Xbox 360 controller:
 **Note**: Virtual gamepad functionality is Windows-only. On other platforms, use keyboard or mouse control.
 
-### Screenshot Not Working When Game Has Focus
+### Screenshot Not Working
 
 **Problem**: Screenshot hotkey works outside the game but fails when the game window is focused.
 
@@ -339,22 +328,6 @@ For gamepad control on Windows, the script uses `vgamepad` to create a virtual X
    sudo python pano_capture.py --test-screenshot "Your Game"
    ```
 
-3. **Test with --test-screenshot first**
-   ```bash
-   python pano_capture.py --test-screenshot "Your Game"
-   ```
-   If it works outside the game but not inside, use solutions 1 or 2 above.
-
-## Repository Structure
-
-```
-game-360-panorama-capture/
-├── pano_capture.py           # Main automation script
-├── requirements.txt               # Required Python packages
-├── game_config.json               # Game-specific configurations
-├── captures/                      # Capture sessions are stored here
-│   └── panorama_capture_[game]_[timestamp]/
-│       ├── session_info.json     # Capture session metadata
-│       └── (screenshots saved by your capture tool)
-└── README.md                      # This documentation file
-```
+3. **Use the in-game Screenshot capabilities**
+   - Instead of using an external Screenshot tools, configure the script to use the game's built-in screenshot function
+   - Set the `screenshot.key` to the game's screenshot hotkey in the configuration
