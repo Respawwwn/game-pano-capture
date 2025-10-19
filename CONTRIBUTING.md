@@ -42,15 +42,36 @@ Clone the repository and set up the development environment:
 
 ## 🏆 Tests
 
-We use pytest for testing to ensure code quality and prevent regressions.
+We use pytest for testing to ensure code quality and prevent regressions. Tests are organized by platform and functionality using pytest markers.
+
+### Test Structure
+
+Tests are organized into different categories:
+
+- **Unit tests** (`@pytest.mark.unit`) - Platform-agnostic tests that run on all platforms
+- **Platform-specific tests** - Tests that only run on specific platforms:
+  - `@pytest.mark.linux` - Linux/generic keyboard tests
+  - `@pytest.mark.windows` - Windows-specific tests
+  - `@pytest.mark.macos` - macOS-specific tests
 
 ### Running Tests
 
-Run the test suite with coverage reporting:
+Run different test categories:
 
 ```bash
 # Run all tests with coverage
 pytest
+
+# Run only unit tests (platform-agnostic)
+pytest -m "unit"
+
+# Run platform-specific tests (automatically detected)
+pytest -m "linux"    # On Linux systems
+pytest -m "windows"  # On Windows systems  
+pytest -m "macos"    # On macOS systems
+
+# Run tests with verbose output
+pytest --verbose
 ```
 
 ### Coverage Reports
