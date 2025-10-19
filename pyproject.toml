@@ -91,5 +91,6 @@ markers = [
     "macos: tests requiring macOS",
     "windows: tests requiring Windows",
     "linux: tests requiring Linux",
-    "unit: unit tests that can run without hardware interaction"
+    "unit: unit tests",
+    "functional: functional tests"
 ]
