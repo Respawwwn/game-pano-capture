@@ -57,6 +57,7 @@ class WindowsGamepadHandler(IGamepadHandler):
             self._virtual_gamepad = vg.VX360Gamepad()
             self._initialized = True
             self._logger.info("Virtual Xbox 360 gamepad created successfully")
+            print("Windows: Virtual Xbox 360 gamepad initialized")
             return True
 
         except Exception as e:
@@ -319,11 +320,7 @@ class WindowsGamepadHandler(IGamepadHandler):
         Returns:
             True if the handler is available and can be used, False otherwise
         """
-        return (
-            VGAMEPAD_AVAILABLE
-            and self._initialized
-            and self._virtual_gamepad is not None
-        )
+        return VGAMEPAD_AVAILABLE
 
     def get_platform_name(self) -> str:
         """
