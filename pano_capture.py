@@ -29,7 +29,14 @@ from core.constants import (
 
 
 class GamePanoCapture:
-    def __init__(self, config_file="game_config.json", debug=False):
+    def __init__(
+        self,
+        config_file="game_config.json",
+        debug=False,
+        keyboard_factory=None,
+        mouse_factory=None,
+        gamepad_factory=None,
+    ):
         # Initialize configuration manager
         self.config_manager = ConfigManager(config_file)
         self.config = self.config_manager.load()
@@ -38,14 +45,15 @@ class GamePanoCapture:
         self.debug_output_dir = None
         self.debug = debug
 
-        # Initialize platform-specific keyboard handler
-        self.keyboard_handler = KeyboardFactory.create_handler()
+        # Use injected factories or defaults
+        keyboard_factory = keyboard_factory or KeyboardFactory
+        mouse_factory = mouse_factory or MouseFactory
+        gamepad_factory = gamepad_factory or GamepadFactory
 
-        # Initialize platform-specific mouse handler
-        self.mouse_handler = MouseFactory.create_handler()
-
-        # Initialize platform-specific gamepad handler
-        self.gamepad_handler = GamepadFactory.create_handler()
+        # Initialize platform-specific handlers
+        self.keyboard_handler = keyboard_factory.create_handler()
+        self.mouse_handler = mouse_factory.create_handler()
+        self.gamepad_handler = gamepad_factory.create_handler()
 
     def setup_debug_output_directory(self, game_name="capture"):
         """Create debug output directory for session info (only if debug enabled)"""
@@ -728,6 +736,11 @@ def main():
     )
     parser.add_argument("--list", action="store_true", help="List configured games")
     parser.add_argument(
+        "--config",
+        default="game_config.json",
+        help="Path to configuration file (default: game_config.json)",
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help="Enable debug mode (saves capture session info to captures folder)",
@@ -735,7 +748,7 @@ def main():
 
     args = parser.parse_args()
 
-    capturer = GamePanoCapture(debug=args.debug)
+    capturer = GamePanoCapture(config_file=args.config, debug=args.debug)
 
     if args.setup:
         capturer.create_game_config(args.setup)
