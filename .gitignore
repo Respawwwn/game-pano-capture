@@ -37,6 +37,14 @@ wheels/
 .installed.cfg
 *.egg
 
+# PyInstaller build artifacts
+*.manifest
+*.exe
+
+# Screenshot output directories
+screenshots/
+/screenshots/
+
 # Logs
 *.log
 

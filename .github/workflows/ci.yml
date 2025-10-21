@@ -88,3 +88,50 @@ jobs:
       if: matrix.os == 'macos-latest'
       run: |
         pytest -m "macos" --verbose
+
+  test-build:
+    name: Test Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+
+    - name: Test build process
+      run: |
+        python build.py
+
+    - name: Test executable
+      run: |
+        # Run the appropriate executable
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          output=$(./dist/pano-capture.exe --help)
+          usage_pattern="usage: pano-capture.exe"
+          platform="Windows"
+        else
+          output=$(./dist/pano-capture --help)
+          usage_pattern="usage: pano-capture"
+          platform="Unix"
+        fi
+
+        # Display output and verify common patterns
+        echo "$output"
+        echo "$output" | grep -q "$usage_pattern" || (echo "ERROR: $platform usage line not found" && exit 1)
+        echo "$output" | grep -q "Game Screenshot Automation" || (echo "ERROR: Description not found" && exit 1)
+        echo "$output" | grep -q "\-\-setup SETUP" || (echo "ERROR: --setup option not found" && exit 1)
+        echo "$output" | grep -q "\-\-capture CAPTURE" || (echo "ERROR: --capture option not found" && exit 1)
+        echo "✓ $platform executable help output verified"
+      shell: bash
