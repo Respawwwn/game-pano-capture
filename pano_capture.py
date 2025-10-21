@@ -23,9 +23,11 @@ from core.constants import (
     DEFAULT_SCREENSHOT_DELAY,
     DEFAULT_SCREENSHOT_KEY,
     DEFAULT_SCREENSHOT_PAUSE,
+    DEFAULT_SCREENSHOT_TYPE,
     DEFAULT_VERTICAL_MOVEMENT_DURATION,
     DEFAULT_VERTICAL_STEPS,
 )
+from screenshot import create_handler
 
 
 class GamePanoCapture:
@@ -68,27 +70,42 @@ class GamePanoCapture:
         print(f"Debug mode: Session info will be saved to: {self.debug_output_dir}")
 
     def take_screenshot(self, screenshot_number, game_config):
-        """Trigger screenshot using configured keybind"""
+        """Take screenshot using configured method"""
         try:
-            screenshot_config = game_config["screenshot"]
-            screenshot_key = screenshot_config["key"]
-            print(
-                f"Taking screenshot {screenshot_number:04d} (pressing {screenshot_key})..."
+            screenshot_type = game_config.get(
+                "screenshot_type", DEFAULT_SCREENSHOT_TYPE
             )
+            screenshot_config = game_config["screenshot"]
 
-            # Use platform-specific keyboard handler.
-            success = self.keyboard_handler.press_key_combination(screenshot_key)
-
-            if success:
-                # Wait for screenshot to be processed by external tool
-                screenshot_pause = screenshot_config["pause"]
-                time.sleep(screenshot_pause)
-                return True
+            # Get appropriate shortcut key for display
+            if screenshot_type == "external_app":
+                screenshot_key = screenshot_config.get(
+                    "shortcut_key", screenshot_config.get("key")
+                )
+                print(
+                    f"Taking screenshot {screenshot_number:04d} (pressing {screenshot_key})..."
+                )
             else:
-                return False
+                print(f"Taking screenshot {screenshot_number:04d}...")
+
+            # Create screenshot handler
+            screenshot_handler = create_handler(screenshot_type, self.keyboard_handler)
+
+            # Apply screenshot delay if specified
+            screenshot_delay = screenshot_config.get("delay", 0)
+            if screenshot_delay > 0:
+                time.sleep(screenshot_delay)
+
+            # Take screenshot
+            screenshot_path = screenshot_handler.take_screenshot(game_config)
+
+            if screenshot_path:
+                print(f"✓ Screenshot saved to: {screenshot_path}")
+
+            return True
 
         except Exception as e:
-            print(f"Error triggering screenshot: {e}")
+            print(f"Error taking screenshot: {e}")
             return False
 
     def move_camera(self, direction, game_config):
@@ -254,14 +271,20 @@ class GamePanoCapture:
             f"Vertical steps: {movement_config.get('vertical_steps', DEFAULT_VERTICAL_STEPS)}"
         )
         print(f"Control type: {game_config['control_type']}")
-        print(f"Screenshot key: {screenshot_config['key']}")
+        screenshot_key = screenshot_config.get(
+            "shortcut_key", screenshot_config.get("key", "f9")
+        )
+        print(f"Screenshot key: {screenshot_key}")
 
         print(f"\nStarting capture in {CAPTURE_COUNTDOWN_SECONDS} seconds...")
         print(
             "Make sure the game is in focus and camera is at zenith position (straight up)!"
         )
         print("Make sure your screenshot tool is ready!")
-        print(f"Screenshot key: {screenshot_config['key']}")
+        screenshot_key = screenshot_config.get(
+            "shortcut_key", screenshot_config.get("key", "f9")
+        )
+        print(f"Screenshot key: {screenshot_key}")
         print("Press Ctrl+C to abort at any time.")
 
         for i in range(CAPTURE_COUNTDOWN_SECONDS, 0, -1):
@@ -352,12 +375,37 @@ class GamePanoCapture:
 
         # Screenshot configuration
         print("\n--- Screenshot Settings ---")
-        screenshot_key = (
-            input(
-                f"Screenshot keybind (e.g., 'f9', 'ctrl+shift+s', 'alt+4') [{DEFAULT_SCREENSHOT_KEY}]: "
+        print("Screenshot capture methods:")
+        print("  external_app - Use external screenshot tool (ShareX, Greenshot, etc.)")
+        print("  built_in     - Direct screenshot capture by this application")
+        screenshot_type = input(
+            f"Screenshot type (external_app/built_in) [{DEFAULT_SCREENSHOT_TYPE}]: "
+        ).lower()
+        if screenshot_type not in ["external_app", "built_in"]:
+            screenshot_type = DEFAULT_SCREENSHOT_TYPE
+
+        screenshot_config = {}
+
+        if screenshot_type == "external_app":
+            screenshot_key = (
+                input(
+                    f"Screenshot keybind (e.g., 'f9', 'ctrl+shift+s', 'alt+4') [{DEFAULT_SCREENSHOT_KEY}]: "
+                )
+                or DEFAULT_SCREENSHOT_KEY
             )
-            or DEFAULT_SCREENSHOT_KEY
-        )
+            screenshot_config["shortcut_key"] = screenshot_key
+        else:  # built_in
+            monitor_num = int(
+                input("Monitor number to capture (1=primary, 2=secondary, etc.) [1]: ")
+                or "1"
+            )
+            screenshot_path = (
+                input("Screenshot save directory [./screenshots/]: ")
+                or "./screenshots/"
+            )
+            screenshot_config["monitor"] = monitor_num
+            screenshot_config["path"] = screenshot_path
+
         screenshot_delay = float(
             input(f"Delay before screenshot in seconds [{DEFAULT_SCREENSHOT_DELAY}]: ")
             or str(DEFAULT_SCREENSHOT_DELAY)
@@ -366,6 +414,9 @@ class GamePanoCapture:
             input(f"Pause after screenshot in seconds [{DEFAULT_SCREENSHOT_PAUSE}]: ")
             or str(DEFAULT_SCREENSHOT_PAUSE)
         )
+
+        screenshot_config["delay"] = screenshot_delay
+        screenshot_config["pause"] = screenshot_pause
 
         # Movement configuration
         print("\n--- Movement Settings ---")
@@ -407,11 +458,8 @@ class GamePanoCapture:
                 "vertical_movement_duration": vertical_movement_duration,
                 "pause_between_moves": pause_between_moves,
             },
-            "screenshot": {
-                "key": screenshot_key,
-                "delay": screenshot_delay,
-                "pause": screenshot_pause,
-            },
+            "screenshot_type": screenshot_type,
+            "screenshot": screenshot_config,
             "controls": {},
         }
 
@@ -439,11 +487,8 @@ class GamePanoCapture:
             sensitivity = input(
                 f"Mouse sensitivity in pixels (10-500) [{DEFAULT_MOUSE_SENSITIVITY}]: "
             ) or str(DEFAULT_MOUSE_SENSITIVITY)
-            capture_mouse = input("Capture mouse during operation? (y/n) [n]: ").lower()
-            capture_mouse = capture_mouse == "y"
             config["controls"]["mouse"] = {
                 "sensitivity": int(sensitivity),
-                "capture_mouse": capture_mouse,
             }
             print("Mouse control configured!")
 
@@ -452,7 +497,13 @@ class GamePanoCapture:
         self.config_manager.save()
 
         print(f"\nConfiguration saved for '{game_name}'!")
-        print(f"Screenshot key: {screenshot_key}")
+        print(f"Screenshot type: {screenshot_type}")
+        if screenshot_type == "external_app":
+            print(f"Screenshot key: {screenshot_config['shortcut_key']}")
+        else:
+            print(
+                f"Monitor: {screenshot_config['monitor']}, Path: {screenshot_config['path']}"
+            )
         print(f"Control type: {control_type}")
         print(f"Horizontal steps: {horizontal_steps}, Vertical steps: {vertical_steps}")
 
@@ -610,7 +661,10 @@ class GamePanoCapture:
         print(f"  Horizontal steps: {horizontal_steps}")
         print(f"  Vertical steps: {vertical_steps}")
         print(f"  Control type: {game_config['control_type']}")
-        print(f"  Screenshot key: {game_config.get('screenshot_key', 'f9')}")
+        screenshot_key = game_config.get("screenshot", {}).get(
+            "shortcut_key", game_config.get("screenshot", {}).get("key", "f9")
+        )
+        print(f"  Screenshot key: {screenshot_key}")
 
         print("\nTiming settings:")
         print(f"  Horizontal movement duration: {horizontal_movement_duration}s")
@@ -648,21 +702,42 @@ class GamePanoCapture:
 
         game_config = self.config_manager.get_game_config(game_name)
         screenshot_config = game_config.get("screenshot", {})
-        screenshot_key = screenshot_config.get("key", "f9")
+        screenshot_type = game_config.get("screenshot_type", DEFAULT_SCREENSHOT_TYPE)
 
         print(f"\n=== Testing Screenshot Tool for '{game_name}' ===")
-        print(f"Screenshot key configured: {screenshot_key}")
+        print(f"Screenshot type: {screenshot_type}")
+
+        if screenshot_type == "external_app":
+            screenshot_key = screenshot_config.get(
+                "shortcut_key", screenshot_config.get("key", "f9")
+            )
+            print(f"Screenshot key configured: {screenshot_key}")
+            print(
+                "\nThis will test your external screenshot tool by taking 3 test screenshots."
+            )
+            print("Make sure:")
+            print("- Your screenshot tool is running and ready")
+            print("- The game window is in focus")
+            print("- Your screenshot region/settings are configured")
+        else:  # built_in
+            monitor_num = screenshot_config.get("monitor", 1)
+            save_path = screenshot_config.get("path", "./screenshots/")
+            print(f"Monitor: {monitor_num}")
+            print(f"Save path: {save_path}")
+            print(
+                "\nThis will test built-in screenshot capture by taking 3 test screenshots."
+            )
+            print("Make sure:")
+            print("- The game window is in focus")
+            print("- The save directory is accessible")
+            print("- Monitor number is correct")
+
         print(
             f"Screenshot delay: {screenshot_config.get('delay', DEFAULT_SCREENSHOT_DELAY)}s"
         )
         print(
             f"Screenshot pause: {screenshot_config.get('pause', DEFAULT_SCREENSHOT_PAUSE)}s"
         )
-        print("\nThis will test your screenshot tool by taking 3 test screenshots.")
-        print("Make sure:")
-        print("- Your screenshot tool is running and ready")
-        print("- The game window is in focus")
-        print("- Your screenshot region/settings are configured")
 
         print(f"\nStarting screenshot test in {CAPTURE_COUNTDOWN_SECONDS} seconds...")
         print("Focus the game window now!")
@@ -677,24 +752,34 @@ class GamePanoCapture:
             for test_num in range(1, 4):
                 print(f"Taking test screenshot {test_num}/3...")
 
-                # Take screenshot using configured keybind
-                time.sleep(screenshot_config.get("delay", DEFAULT_SCREENSHOT_DELAY))
+                # Take screenshot using configured handler.
                 if self.take_screenshot(test_num, game_config):
                     print(f"✓ Screenshot {test_num} triggered successfully")
                 else:
                     print(f"✗ Screenshot {test_num} failed")
 
-                # Wait between screenshots
-                if test_num < 3:
-                    time.sleep(2)
-
             print("\n=== Screenshot Test Complete ===")
-            print("Check your screenshot tool's output folder for the 3 test images.")
-            print("If screenshots didn't capture properly:")
-            print(f"- Verify your screenshot tool responds to '{screenshot_key}' key")
-            print("- Check if the game window was in focus")
-            print("- Ensure your screenshot tool's region is set correctly")
-            print("- Try adjusting screenshot_delay and screenshot_pause in config")
+
+            if screenshot_type == "external_app":
+                screenshot_key = screenshot_config.get("shortcut_key")
+                print(
+                    "Check your screenshot tool's output folder for the 3 test images."
+                )
+                print("If screenshots didn't capture properly:")
+                print(
+                    f"- Verify your screenshot tool responds to '{screenshot_key}' key"
+                )
+                print("- Check if the game window was in focus")
+                print("- Ensure your screenshot tool's region is set correctly")
+                print("- Try adjusting screenshot_delay and screenshot_pause in config")
+            else:  # built_in
+                save_path = screenshot_config.get("path")
+                print(f"Check the save directory '{save_path}' for the 3 test images.")
+                print("If screenshots didn't capture properly:")
+                print("- Check if the save directory is accessible and writable")
+                print("- Verify the monitor number is correct")
+                print("- Check if mss library is installed (pip install mss)")
+                print("- Try adjusting screenshot_delay and screenshot_pause in config")
 
         except KeyboardInterrupt:
             print("\n=== Screenshot Test Interrupted ===")

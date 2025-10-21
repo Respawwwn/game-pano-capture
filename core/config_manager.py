@@ -9,6 +9,8 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from .constants import DEFAULT_SCREENSHOT_TYPE
+
 
 class ConfigManager:
     """
@@ -169,6 +171,12 @@ class ConfigManager:
             if key not in merged_config["movement"]:
                 merged_config["movement"][key] = value
 
+        # Merge screenshot type
+        if "screenshot_type" not in merged_config:
+            merged_config["screenshot_type"] = defaults.get(
+                "screenshot_type", DEFAULT_SCREENSHOT_TYPE
+            )
+
         # Merge screenshot settings
         if "screenshot" not in merged_config:
             merged_config["screenshot"] = {}
@@ -225,12 +233,12 @@ class ConfigManager:
             DEFAULT_KEY_LEFT,
             DEFAULT_KEY_RIGHT,
             DEFAULT_KEY_UP,
-            DEFAULT_MOUSE_CAPTURE,
             DEFAULT_MOUSE_SENSITIVITY,
             DEFAULT_PAUSE_BETWEEN_MOVES,
             DEFAULT_SCREENSHOT_DELAY,
             DEFAULT_SCREENSHOT_KEY,
             DEFAULT_SCREENSHOT_PAUSE,
+            DEFAULT_SCREENSHOT_TYPE,
             DEFAULT_VERTICAL_MOVEMENT_DURATION,
             DEFAULT_VERTICAL_STEPS,
         )
@@ -246,8 +254,9 @@ class ConfigManager:
                     "vertical_movement_duration": DEFAULT_VERTICAL_MOVEMENT_DURATION,
                     "pause_between_moves": DEFAULT_PAUSE_BETWEEN_MOVES,
                 },
+                "screenshot_type": DEFAULT_SCREENSHOT_TYPE,
                 "screenshot": {
-                    "key": DEFAULT_SCREENSHOT_KEY,
+                    "shortcut_key": DEFAULT_SCREENSHOT_KEY,
                     "delay": DEFAULT_SCREENSHOT_DELAY,
                     "pause": DEFAULT_SCREENSHOT_PAUSE,
                 },
@@ -261,10 +270,7 @@ class ConfigManager:
                     "gamepad": {
                         "stick_movement_amount": DEFAULT_GAMEPAD_STICK_MOVEMENT
                     },
-                    "mouse": {
-                        "sensitivity": DEFAULT_MOUSE_SENSITIVITY,
-                        "capture_mouse": DEFAULT_MOUSE_CAPTURE,
-                    },
+                    "mouse": {"sensitivity": DEFAULT_MOUSE_SENSITIVITY},
                 },
             },
             "games": {
@@ -278,8 +284,9 @@ class ConfigManager:
                         "vertical_movement_duration": DEFAULT_VERTICAL_MOVEMENT_DURATION,
                         "pause_between_moves": DEFAULT_PAUSE_BETWEEN_MOVES,
                     },
+                    "screenshot_type": DEFAULT_SCREENSHOT_TYPE,
                     "screenshot": {
-                        "key": DEFAULT_SCREENSHOT_KEY,
+                        "shortcut_key": DEFAULT_SCREENSHOT_KEY,
                         "delay": DEFAULT_SCREENSHOT_DELAY,
                         "pause": DEFAULT_SCREENSHOT_PAUSE,
                     },

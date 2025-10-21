@@ -13,6 +13,7 @@ DEFAULT_VERTICAL_MOVEMENT_DURATION = 0.1
 DEFAULT_PAUSE_BETWEEN_MOVES = 0.3
 
 # Default screenshot configuration
+DEFAULT_SCREENSHOT_TYPE = "external_app"
 DEFAULT_SCREENSHOT_KEY = "f9"
 DEFAULT_SCREENSHOT_DELAY = 0.3
 DEFAULT_SCREENSHOT_PAUSE = 0.3
@@ -20,7 +21,6 @@ DEFAULT_SCREENSHOT_PAUSE = 0.3
 # Default control configuration
 DEFAULT_GAMEPAD_STICK_MOVEMENT = 0.8
 DEFAULT_MOUSE_SENSITIVITY = 100
-DEFAULT_MOUSE_CAPTURE = False
 
 # Default keyboard keys
 DEFAULT_KEY_LEFT = "left"
@@ -84,7 +84,6 @@ class ConfigDefaults:
         """Get default mouse control configuration."""
         return {
             "sensitivity": DEFAULT_MOUSE_SENSITIVITY,
-            "capture_mouse": DEFAULT_MOUSE_CAPTURE,
         }
 
     @staticmethod
