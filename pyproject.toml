@@ -79,14 +79,14 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.ruff.lint.isort]
-known-first-party = ["control", "core", "commands"]
+known-first-party = ["control", "core", "commands", "screenshot"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "--cov=control --cov=core --cov-report=html --cov-report=term"
+addopts = "--cov=control --cov=core --cov=screenshot --cov-report=html --cov-report=term"
 markers = [
     "macos: tests requiring macOS",
     "windows: tests requiring Windows",

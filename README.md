@@ -137,18 +137,28 @@ python pano_capture.py --capture "Cyberpunk 2077"
 - `movement.pause_between_moves`: Delay between camera movements (seconds)
 
 ### Screenshot Settings
-- `screenshot.key`: Key combination for your screenshot tool
+- `screenshot_type`: "external_app" (uses external tool) or "built_in" (direct capture)
+- `screenshot.shortcut_key`: Key combination for external screenshot tool (external_app only)
 - `screenshot.delay`: Wait time before taking screenshot (seconds)
 - `screenshot.pause`: Wait time after taking screenshot (seconds)
+- `screenshot.monitor`: Monitor number to capture from (built_in only, 1-based index)
+- `screenshot.path`: Directory path to save screenshots (built_in only)
 
 ### Control Settings
 - `control_type`: "keyboard", "gamepad", or "mouse"
 - `controls.keyboard`: Mapping of directions to keyboard keys
 - `controls.gamepad.stick_movement_amount`: Gamepad sensitivity (0.1-1.0)
 - `controls.mouse.sensitivity`: Mouse movement pixels (10-500)
-- `controls.mouse.capture_mouse`: Whether to capture mouse during operation
 
 ### Advanced Configuration
+
+#### Custom Key Bindings
+
+The script supports various key formats:
+- Simple keys: `f9`, `space`, `enter`
+- Arrow keys: `left`, `right`, `up`, `down`
+- Letter keys: `w`, `a`, `s`, `d`
+- Key combinations: `ctrl+shift+s`, `alt+f12`
 
 #### Custom Key Bindings
 
@@ -163,7 +173,6 @@ The script supports various key formats:
 {
   "games": {
     "Cyberpunk 2077": {
-      "description": "Cyberpunk 2077 with keyboard controls",
       "control_type": "keyboard",
       "movement": {
         "horizontal_steps": 36,
@@ -171,11 +180,6 @@ The script supports various key formats:
         "horizontal_movement_duration": 0.1,
         "vertical_movement_duration": 0.1,
         "pause_between_moves": 0.3
-      },
-      "screenshot": {
-        "key": "f9",
-        "delay": 0.5,
-        "pause": 0.8
       },
       "controls": {
         "keyboard": {
@@ -190,13 +194,18 @@ The script supports various key formats:
 }
 ```
 
+**Control Settings:**
+- `left` the key to move the camera left
+- `right` the key to move the camera right
+- `up` the key to move the camera up
+- `down` the key to move the camera down
+
 #### Gamepad Configuration
 
 ```json
 {
   "games": {
     "Cyberpunk 2077 (Gamepad)": {
-      "description": "Cyberpunk 2077 with gamepad controls",
       "control_type": "gamepad",
       "movement": {
         "horizontal_steps": 36,
@@ -205,20 +214,18 @@ The script supports various key formats:
         "vertical_movement_duration": 0.1,
         "pause_between_moves": 0.3
       },
-      "screenshot": {
-        "key": "f9",
-        "delay": 0.5,
-        "pause": 0.8
-      },
       "controls": {
         "gamepad": {
           "stick_movement_amount": 0.8
         }
-      }
+      },
     }
   }
 }
 ```
+
+**Control Settings:**
+- `stick_movement_amount` controls how far to move the right stick (0.1-1.0)
 
 #### Mouse Configuration
 
@@ -226,7 +233,6 @@ The script supports various key formats:
 {
   "games": {
     "Cyberpunk 2077 (Mouse)": {
-      "description": "Cyberpunk 2077 with mouse controls",
       "control_type": "mouse",
       "movement": {
         "horizontal_steps": 36,
@@ -235,26 +241,58 @@ The script supports various key formats:
         "vertical_movement_duration": 0.1,
         "pause_between_moves": 0.3
       },
-      "screenshot": {
-        "key": "f9",
-        "delay": 0.5,
-        "pause": 0.8
-      },
       "controls": {
         "mouse": {
-          "sensitivity": 200,
-          "capture_mouse": false
+          "sensitivity": 200
         }
-      }
+      },
     }
   }
 }
 ```
 
 **Control Settings:**
-- **Gamepad**: `stick_movement_amount` controls how far to move the right stick (0.1-1.0)
-- **Mouse**: `sensitivity` controls mouse movement distance in pixels (10-500)
-- **Mouse**: `capture_mouse` whether to capture mouse during operation (Windows only)
+- `sensitivity` controls mouse movement distance in pixels (10-500)
+
+#### Screenshot Configuration
+
+```json
+{
+  "games": {
+    "Cyberpunk 2077 (Screenshot External App)": {
+      "screenshot_type": "external_app",
+      "screenshot": {
+        "shortcut_key": "f9",
+        "delay": 0.5,
+        "pause": 0.8
+      },
+    }
+  }
+}
+```
+
+```json
+{
+  "games": {
+    "Cyberpunk 2077 (Screenshot Built-in)": {
+      "screenshot_type": "built_in",
+      "screenshot": {
+         "delay": 0.5,
+         "pause": 0.8,
+         "monitor": 1,
+         "path": "./screenshots/"
+      },
+    }
+  }
+}
+```
+
+**Control Settings:**
+- `shortcut_key` the key combination to trigger your screenshot tool
+- `delay` seconds to wait before taking screenshot (to allow camera to stabilize and game assets to load)
+- `pause` seconds to wait after taking screenshot (to avoid overwhelming the screenshot tool)
+- `monitor` monitor number to capture from (1-based index)
+- `path` screenshot save directory 
 
 ## Command Reference
 
@@ -305,7 +343,7 @@ python pano_capture.py --list
 
 ### Gamepad Support
 
-**Note**: Virtual gamepad functionality is Windows-only. On other platforms, use keyboard or mouse control.
+Virtual gamepad functionality is Windows-only. On other platforms, use keyboard or mouse control.
 
 ### Screenshot Not Working
 
@@ -327,7 +365,6 @@ python pano_capture.py --list
    # Linux/macOS
    sudo python pano_capture.py --test-screenshot "Your Game"
    ```
-
 3. **Use the in-game Screenshot capabilities**
    - Instead of using an external Screenshot tools, configure the script to use the game's built-in screenshot function
-   - Set the `screenshot.key` to the game's screenshot hotkey in the configuration
+   - Set the `screenshot.shortcut_key` to the game's screenshot hotkey in the configuration
