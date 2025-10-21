@@ -3,6 +3,14 @@ name: CI
 on:
   push:
 
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build (e.g., 1.0.0)'
+        required: true
+        type: string
+
 jobs:
   ruff-linter:
     runs-on: ubuntu-latest
@@ -135,3 +143,156 @@ jobs:
         echo "$output" | grep -q "\-\-capture CAPTURE" || (echo "ERROR: --capture option not found" && exit 1)
         echo "✓ $platform executable help output verified"
       shell: bash
+
+  build:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    needs: [ruff-linter, ruff-formatter, tests, test-build]
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            executable: pano-capture
+#           - os: windows-latest
+#             platform: windows
+#             executable: pano-capture.exe
+          - os: macos-latest
+            platform: macos
+            executable: pano-capture
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Get version identifier
+      id: tag
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        else
+          # For branch builds, use commit SHA
+          echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
+        fi
+      shell: bash
+
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Build executable
+      run: |
+        python build.py
+
+    - name: Verify executable was created
+      run: |
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          dir dist
+        else
+          ls -la dist/
+        fi
+      shell: bash
+
+    - name: Create versioned copies
+      run: |
+        tag="${{ steps.tag.outputs.tag }}"
+        platform="${{ matrix.platform }}"
+
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          # Windows executable
+          cp "dist/pano-capture.exe" "dist/pano-capture-${tag}-${platform}.exe"
+          cp "dist/pano-capture.exe" "dist/pano-capture-latest-${platform}.exe"
+        else
+          # Linux/macOS executable
+          cp "dist/pano-capture" "dist/pano-capture-${tag}-${platform}"
+          cp "dist/pano-capture" "dist/pano-capture-latest-${platform}"
+        fi
+
+        echo "Created versions:"
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          dir dist
+        else
+          ls -la dist
+        fi
+      shell: bash
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: pano-capture-${{ steps.tag.outputs.tag }}-${{ matrix.platform }}
+        path: |
+          dist/pano-capture-*
+        retention-days: 1
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Get tag name
+      id: tag
+      run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: artifacts
+
+    - name: Display structure of downloaded files
+      run: ls -la artifacts/
+
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Release ${{ steps.tag.outputs.tag }}
+        tag_name: ${{ steps.tag.outputs.tag }}
+        body: |
+          ## Game Pano Capture ${{ steps.tag.outputs.tag }}
+
+          Standalone executables for multiple platforms.
+
+          ### Downloads
+
+          **Latest versions (recommended):**
+          - **Windows**: `pano-capture-latest-windows.exe`
+          - **macOS**: `pano-capture-latest-macos`
+          - **Linux**: `pano-capture-latest-linux`
+
+          **Versioned releases:**
+          - **Windows**: `pano-capture-${{ steps.tag.outputs.tag }}-windows.exe`
+          - **macOS**: `pano-capture-${{ steps.tag.outputs.tag }}-macos`
+          - **Linux**: `pano-capture-${{ steps.tag.outputs.tag }}-linux`
+
+          ### Quick Start
+          ```bash
+          # Download for your platform, then:
+
+          # Make executable (Linux/macOS)
+          chmod +x pano-capture-latest-macos
+
+          # Run
+          ./pano-capture-latest-macos --help
+
+          # Windows
+          pano-capture-latest-windows.exe --help
+          ```
+        files: |
+          artifacts/*/pano-capture-*
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
