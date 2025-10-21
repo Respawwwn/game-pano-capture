@@ -79,9 +79,7 @@ class GamePanoCapture:
 
             # Get appropriate shortcut key for display
             if screenshot_type == "external_app":
-                screenshot_key = screenshot_config.get(
-                    "shortcut_key", screenshot_config.get("key")
-                )
+                screenshot_key = screenshot_config.get("shortcut_key", "f9")
                 print(
                     f"Taking screenshot {screenshot_number:04d} (pressing {screenshot_key})..."
                 )
@@ -271,9 +269,7 @@ class GamePanoCapture:
             f"Vertical steps: {movement_config.get('vertical_steps', DEFAULT_VERTICAL_STEPS)}"
         )
         print(f"Control type: {game_config['control_type']}")
-        screenshot_key = screenshot_config.get(
-            "shortcut_key", screenshot_config.get("key", "f9")
-        )
+        screenshot_key = screenshot_config.get("shortcut_key", "f9")
         print(f"Screenshot key: {screenshot_key}")
 
         print(f"\nStarting capture in {CAPTURE_COUNTDOWN_SECONDS} seconds...")
@@ -281,9 +277,7 @@ class GamePanoCapture:
             "Make sure the game is in focus and camera is at zenith position (straight up)!"
         )
         print("Make sure your screenshot tool is ready!")
-        screenshot_key = screenshot_config.get(
-            "shortcut_key", screenshot_config.get("key", "f9")
-        )
+        screenshot_key = screenshot_config.get("shortcut_key", "f9")
         print(f"Screenshot key: {screenshot_key}")
         print("Press Ctrl+C to abort at any time.")
 
@@ -661,9 +655,7 @@ class GamePanoCapture:
         print(f"  Horizontal steps: {horizontal_steps}")
         print(f"  Vertical steps: {vertical_steps}")
         print(f"  Control type: {game_config['control_type']}")
-        screenshot_key = game_config.get("screenshot", {}).get(
-            "shortcut_key", game_config.get("screenshot", {}).get("key", "f9")
-        )
+        screenshot_key = game_config.get("screenshot", {}).get("shortcut_key", "f9")
         print(f"  Screenshot key: {screenshot_key}")
 
         print("\nTiming settings:")
@@ -708,9 +700,7 @@ class GamePanoCapture:
         print(f"Screenshot type: {screenshot_type}")
 
         if screenshot_type == "external_app":
-            screenshot_key = screenshot_config.get(
-                "shortcut_key", screenshot_config.get("key", "f9")
-            )
+            screenshot_key = screenshot_config.get("shortcut_key", "f9")
             print(f"Screenshot key configured: {screenshot_key}")
             print(
                 "\nThis will test your external screenshot tool by taking 3 test screenshots."

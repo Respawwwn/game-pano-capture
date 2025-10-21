@@ -24,9 +24,7 @@ class ExternalAppHandler(ScreenshotHandler):
         """
         try:
             screenshot_config = config["screenshot"]
-            screenshot_key = screenshot_config.get(
-                "shortcut_key", screenshot_config.get("key")
-            )
+            screenshot_key = screenshot_config["shortcut_key"]
             delay = screenshot_config.get("delay", 0)
             pause = screenshot_config.get("pause", 0)
 

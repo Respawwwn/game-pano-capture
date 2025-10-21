@@ -10,6 +10,9 @@ pygame>=2.5.0
 # Generic keyboard library (all platforms, fallback for macOS)
 keyboard>=0.13.0
 
+# Screenshot capture library for built-in screenshot functionality
+mss>=9.0.0
+
 # Platform-specific dependencies
 # ===============================
 
