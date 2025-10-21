@@ -11,15 +11,12 @@ It systematically moves the camera in a spherical pattern and triggers your scre
 - **Multiple control support**: Works with keyboard, gamepad (Xbox controller), or mouse controls
 - **Custom screenshot integration**: Uses your preferred screenshot tool via configurable keybinds
 - **Spherical capture pattern**: Follows proper panoramic photography patterns from zenith to nadir
-- **Resume capability**: Can be interrupted and provides partial capture information
-- **Movement testing**: Test camera movement and screenshot triggers before full capture
-- **Separate horizontal/vertical timing**: Independent movement durations for precise control
 
 ## Prerequisites
 
 - Python 3.7 or higher
 - A screenshot/region capture tool (e.g., ShareX, Greenshot, etc.)
-- Video games with photo mode capability
+- Video games with photo mode or freecam capabilities
 
 ## Getting Started
 
@@ -153,7 +150,15 @@ python pano_capture.py --capture "Cyberpunk 2077"
 - `controls.gamepad.stick_movement_amount`: Gamepad sensitivity (0.1-1.0)
 - `controls.mouse.sensitivity`: Mouse movement pixels (10-500)
 
-### Example Configurations
+### Advanced Configuration
+
+#### Custom Key Bindings
+
+The script supports various key formats:
+- Simple keys: `f9`, `space`, `enter`
+- Arrow keys: `left`, `right`, `up`, `down`
+- Letter keys: `w`, `a`, `s`, `d`
+- Key combinations: `ctrl+shift+s`, `alt+f12`
 
 #### Custom Key Bindings
 
@@ -238,7 +243,7 @@ The script supports various key formats:
       },
       "controls": {
         "mouse": {
-          "sensitivity": 200,
+          "sensitivity": 200
         }
       },
     }
@@ -340,7 +345,7 @@ python pano_capture.py --list
 
 Virtual gamepad functionality is Windows-only. On other platforms, use keyboard or mouse control.
 
-### Screenshot Not Working When Game Has Focus
+### Screenshot Not Working
 
 **Problem**: Screenshot hotkey works outside the game but fails when the game window is focused.
 
@@ -360,9 +365,6 @@ Virtual gamepad functionality is Windows-only. On other platforms, use keyboard 
    # Linux/macOS
    sudo python pano_capture.py --test-screenshot "Your Game"
    ```
-
-3. **Test with --test-screenshot first**
-   ```bash
-   python pano_capture.py --test-screenshot "Your Game"
-   ```
-   If it works outside the game but not inside, use solutions 1 or 2 above.
+3. **Use the in-game Screenshot capabilities**
+   - Instead of using an external Screenshot tools, configure the script to use the game's built-in screenshot function
+   - Set the `screenshot.shortcut_key` to the game's screenshot hotkey in the configuration
