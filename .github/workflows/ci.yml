@@ -154,9 +154,10 @@ jobs:
           - os: ubuntu-latest
             platform: linux
             executable: pano-capture
-#           - os: windows-latest
-#             platform: windows
-#             executable: pano-capture.exe
+        # Cannot build Windows because of vgamepad requiring MSI installation of Virtual Gamepad Emulation C++ framework.
+        # - os: windows-latest
+        #   platform: windows
+        #   executable: pano-capture.exe
           - os: macos-latest
             platform: macos
             executable: pano-capture
