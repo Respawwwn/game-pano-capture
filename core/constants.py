@@ -50,8 +50,6 @@ class ConfigDefaults:
         return {
             "horizontal_steps": DEFAULT_HORIZONTAL_STEPS,
             "vertical_steps": DEFAULT_VERTICAL_STEPS,
-            "horizontal_movement_duration": DEFAULT_HORIZONTAL_MOVEMENT_DURATION,
-            "vertical_movement_duration": DEFAULT_VERTICAL_MOVEMENT_DURATION,
             "pause_between_moves": DEFAULT_PAUSE_BETWEEN_MOVES,
         }
 
@@ -72,12 +70,18 @@ class ConfigDefaults:
             "right": DEFAULT_KEY_RIGHT,
             "up": DEFAULT_KEY_UP,
             "down": DEFAULT_KEY_DOWN,
+            "horizontal_movement_duration": DEFAULT_HORIZONTAL_MOVEMENT_DURATION,
+            "vertical_movement_duration": DEFAULT_VERTICAL_MOVEMENT_DURATION,
         }
 
     @staticmethod
     def get_gamepad_defaults():
         """Get default gamepad control configuration."""
-        return {"stick_movement_amount": DEFAULT_GAMEPAD_STICK_MOVEMENT}
+        return {
+            "stick_movement_amount": DEFAULT_GAMEPAD_STICK_MOVEMENT,
+            "horizontal_movement_duration": DEFAULT_HORIZONTAL_MOVEMENT_DURATION,
+            "vertical_movement_duration": DEFAULT_VERTICAL_MOVEMENT_DURATION,
+        }
 
     @staticmethod
     def get_mouse_defaults():

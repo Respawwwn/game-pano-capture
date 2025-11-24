@@ -108,18 +108,19 @@ class GamePanoCapture:
 
     def move_camera(self, direction, game_config):
         """Move camera in specified direction"""
-        # Get movement settings from new structure
-        movement_config = game_config.get("movement", {})
-
-        # Determine movement duration based on direction
-        if direction in ["left", "right"]:
-            movement_duration = movement_config["horizontal_movement_duration"]
-        else:  # up, down
-            movement_duration = movement_config["vertical_movement_duration"]
-
         if game_config["control_type"] == "keyboard":
             controls_config = game_config.get("controls", {}).get("keyboard", {})
             key = controls_config.get(direction, direction)
+
+            # Determine movement duration based on direction
+            if direction in ["left", "right"]:
+                movement_duration = controls_config.get(
+                    "horizontal_movement_duration", DEFAULT_HORIZONTAL_MOVEMENT_DURATION
+                )
+            else:  # up, down
+                movement_duration = controls_config.get(
+                    "vertical_movement_duration", DEFAULT_VERTICAL_MOVEMENT_DURATION
+                )
 
             # Use platform-specific keyboard handler
             success = self.keyboard_handler.press_key(key, movement_duration)
@@ -148,6 +149,16 @@ class GamePanoCapture:
             stick_amount = controls_config.get(
                 "stick_movement_amount", DEFAULT_GAMEPAD_STICK_MOVEMENT
             )
+
+            # Determine movement duration based on direction
+            if direction in ["left", "right"]:
+                movement_duration = controls_config.get(
+                    "horizontal_movement_duration", DEFAULT_HORIZONTAL_MOVEMENT_DURATION
+                )
+            else:  # up, down
+                movement_duration = controls_config.get(
+                    "vertical_movement_duration", DEFAULT_VERTICAL_MOVEMENT_DURATION
+                )
 
             # Map directions to right stick movements
             if direction == "right":
@@ -427,18 +438,6 @@ class GamePanoCapture:
             input(f"Vertical steps from zenith to nadir [{DEFAULT_VERTICAL_STEPS}]: ")
             or str(DEFAULT_VERTICAL_STEPS)
         )
-        horizontal_movement_duration = float(
-            input(
-                f"Horizontal movement duration in seconds [{DEFAULT_HORIZONTAL_MOVEMENT_DURATION}]: "
-            )
-            or str(DEFAULT_HORIZONTAL_MOVEMENT_DURATION)
-        )
-        vertical_movement_duration = float(
-            input(
-                f"Vertical movement duration in seconds [{DEFAULT_VERTICAL_MOVEMENT_DURATION}]: "
-            )
-            or str(DEFAULT_VERTICAL_MOVEMENT_DURATION)
-        )
         pause_between_moves = float(
             input(f"Pause between moves in seconds [{DEFAULT_PAUSE_BETWEEN_MOVES}]: ")
             or str(DEFAULT_PAUSE_BETWEEN_MOVES)
@@ -451,8 +450,6 @@ class GamePanoCapture:
             "movement": {
                 "horizontal_steps": horizontal_steps,
                 "vertical_steps": vertical_steps,
-                "horizontal_movement_duration": horizontal_movement_duration,
-                "vertical_movement_duration": vertical_movement_duration,
                 "pause_between_moves": pause_between_moves,
             },
             "screenshot_type": screenshot_type,
@@ -463,6 +460,18 @@ class GamePanoCapture:
         # Control-specific configuration
         print(f"\n--- {control_type.title()} Control Settings ---")
         if control_type == "keyboard":
+            horizontal_movement_duration = float(
+                input(
+                    f"Horizontal movement duration in seconds [{DEFAULT_HORIZONTAL_MOVEMENT_DURATION}]: "
+                )
+                or str(DEFAULT_HORIZONTAL_MOVEMENT_DURATION)
+            )
+            vertical_movement_duration = float(
+                input(
+                    f"Vertical movement duration in seconds [{DEFAULT_VERTICAL_MOVEMENT_DURATION}]: "
+                )
+                or str(DEFAULT_VERTICAL_MOVEMENT_DURATION)
+            )
             print(
                 "Key configuration (use key names like 'left', 'right', 'up', 'down', 'a', 'w', etc.):"
             )
@@ -471,13 +480,29 @@ class GamePanoCapture:
                 "right": input("Right key [right]: ") or "right",
                 "up": input("Up key [up]: ") or "up",
                 "down": input("Down key [down]: ") or "down",
+                "horizontal_movement_duration": horizontal_movement_duration,
+                "vertical_movement_duration": vertical_movement_duration,
             }
         elif control_type == "gamepad":
+            horizontal_movement_duration = float(
+                input(
+                    f"Horizontal movement duration in seconds [{DEFAULT_HORIZONTAL_MOVEMENT_DURATION}]: "
+                )
+                or str(DEFAULT_HORIZONTAL_MOVEMENT_DURATION)
+            )
+            vertical_movement_duration = float(
+                input(
+                    f"Vertical movement duration in seconds [{DEFAULT_VERTICAL_MOVEMENT_DURATION}]: "
+                )
+                or str(DEFAULT_VERTICAL_MOVEMENT_DURATION)
+            )
             stick_movement = input(
                 f"Stick movement amount (0.1-1.0) [{DEFAULT_GAMEPAD_STICK_MOVEMENT}]: "
             ) or str(DEFAULT_GAMEPAD_STICK_MOVEMENT)
             config["controls"]["gamepad"] = {
-                "stick_movement_amount": float(stick_movement)
+                "stick_movement_amount": float(stick_movement),
+                "horizontal_movement_duration": horizontal_movement_duration,
+                "vertical_movement_duration": vertical_movement_duration,
             }
             print("Virtual gamepad support implemented using vgamepad!")
         elif control_type == "mouse":
@@ -511,14 +536,22 @@ class GamePanoCapture:
     def test_horizontal_rotation(self, game_name, game_config):
         """Test complete horizontal rotation to verify 360° coverage"""
         movement_config = game_config.get("movement", {})
+        control_type = game_config.get("control_type", "keyboard")
+
+        # Get movement duration from control-specific config
+        horizontal_movement_duration = DEFAULT_HORIZONTAL_MOVEMENT_DURATION
+        if control_type in ["keyboard", "gamepad"]:
+            controls_config = game_config.get("controls", {}).get(control_type, {})
+            horizontal_movement_duration = controls_config.get(
+                "horizontal_movement_duration", DEFAULT_HORIZONTAL_MOVEMENT_DURATION
+            )
 
         print(f"\n=== Testing Horizontal Rotation for '{game_name}' ===")
         print(
             f"Horizontal steps configured: {movement_config.get('horizontal_steps', DEFAULT_HORIZONTAL_STEPS)}"
         )
-        print(
-            f"Horizontal movement duration: {movement_config.get('horizontal_movement_duration', DEFAULT_HORIZONTAL_MOVEMENT_DURATION)}s"
-        )
+        if control_type in ["keyboard", "gamepad"]:
+            print(f"Horizontal movement duration: {horizontal_movement_duration}s")
         print(
             f"Pause between moves: {movement_config.get('pause_between_moves', DEFAULT_PAUSE_BETWEEN_MOVES)}s"
         )
@@ -563,14 +596,22 @@ class GamePanoCapture:
     def test_vertical_movement(self, game_name, game_config):
         """Test vertical movement from zenith to nadir"""
         movement_config = game_config.get("movement", {})
+        control_type = game_config.get("control_type", "keyboard")
+
+        # Get movement duration from control-specific config
+        vertical_movement_duration = DEFAULT_VERTICAL_MOVEMENT_DURATION
+        if control_type in ["keyboard", "gamepad"]:
+            controls_config = game_config.get("controls", {}).get(control_type, {})
+            vertical_movement_duration = controls_config.get(
+                "vertical_movement_duration", DEFAULT_VERTICAL_MOVEMENT_DURATION
+            )
 
         print(f"\n=== Testing Vertical Movement for '{game_name}' ===")
         print(
             f"Vertical steps configured: {movement_config.get('vertical_steps', DEFAULT_VERTICAL_STEPS)}"
         )
-        print(
-            f"Vertical movement duration: {movement_config.get('vertical_movement_duration', DEFAULT_VERTICAL_MOVEMENT_DURATION)}s"
-        )
+        if control_type in ["keyboard", "gamepad"]:
+            print(f"Vertical movement duration: {vertical_movement_duration}s")
         print(
             f"Pause between moves: {movement_config.get('pause_between_moves', DEFAULT_PAUSE_BETWEEN_MOVES)}s"
         )
@@ -624,12 +665,19 @@ class GamePanoCapture:
         total_screenshots = horizontal_steps * (vertical_steps + 1)
 
         # Calculate timing components (in seconds)
-        horizontal_movement_duration = movement_config.get(
-            "horizontal_movement_duration", DEFAULT_HORIZONTAL_MOVEMENT_DURATION
-        )
-        vertical_movement_duration = movement_config.get(
-            "vertical_movement_duration", DEFAULT_VERTICAL_MOVEMENT_DURATION
-        )
+        control_type = game_config.get("control_type", "keyboard")
+
+        # Get movement durations from control-specific config
+        horizontal_movement_duration = DEFAULT_HORIZONTAL_MOVEMENT_DURATION
+        vertical_movement_duration = DEFAULT_VERTICAL_MOVEMENT_DURATION
+        if control_type in ["keyboard", "gamepad"]:
+            controls_config = game_config.get("controls", {}).get(control_type, {})
+            horizontal_movement_duration = controls_config.get(
+                "horizontal_movement_duration", DEFAULT_HORIZONTAL_MOVEMENT_DURATION
+            )
+            vertical_movement_duration = controls_config.get(
+                "vertical_movement_duration", DEFAULT_VERTICAL_MOVEMENT_DURATION
+            )
         pause_between_moves = movement_config.get(
             "pause_between_moves", DEFAULT_PAUSE_BETWEEN_MOVES
         )

@@ -27,13 +27,18 @@ class TestCalculateCommandIntegration:
                     "movement": {
                         "horizontal_steps": 11,
                         "vertical_steps": 6,
-                        "horizontal_movement_duration": 0.5,
-                        "vertical_movement_duration": 0.4,
                         "pause_between_moves": 0.2,
                     },
                     "screenshot": {"key": "alt+4", "delay": 0.3, "pause": 0.2},
                     "controls": {
-                        "keyboard": {"left": "j", "right": "l", "up": "i", "down": "k"}
+                        "keyboard": {
+                            "left": "j",
+                            "right": "l",
+                            "up": "i",
+                            "down": "k",
+                            "horizontal_movement_duration": 0.5,
+                            "vertical_movement_duration": 0.4,
+                        }
                     },
                 }
             }
