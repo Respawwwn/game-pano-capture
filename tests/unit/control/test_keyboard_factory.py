@@ -112,6 +112,14 @@ class TestKeyboardIntegration:
         """Test that key combinations are parsed correctly."""
         handler = KeyboardFactory.create_handler()
 
-        # This should not crash (even if it returns False due to no actual key press)
-        result = handler.press_key_combination("ctrl+c")
-        assert isinstance(result, bool)
+        # Test with safe key combinations that won't interrupt the test
+        # These should not crash (even if they return False due to no actual key press)
+        safe_combinations = ["ctrl+shift+a", "alt+f1", "shift+tab"]
+
+        for combo in safe_combinations:
+            result = handler.press_key_combination(combo)
+            assert isinstance(result, bool), (
+                f"Key combination '{combo}' should return boolean"
+            )
+
+        # Note: We avoid ctrl+c as it would interrupt the test process

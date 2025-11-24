@@ -132,8 +132,6 @@ python pano_capture.py --capture "Cyberpunk 2077"
 ### Movement Settings
 - `movement.horizontal_steps`: Number of steps for complete horizontal rotation
 - `movement.vertical_steps`: Number of steps from zenith to nadir
-- `movement.horizontal_movement_duration`: How long to hold horizontal movement (seconds)
-- `movement.vertical_movement_duration`: How long to hold vertical movement (seconds)
 - `movement.pause_between_moves`: Delay between camera movements (seconds)
 
 ### Screenshot Settings
@@ -160,14 +158,6 @@ The script supports various key formats:
 - Letter keys: `w`, `a`, `s`, `d`
 - Key combinations: `ctrl+shift+s`, `alt+f12`
 
-#### Custom Key Bindings
-
-The script supports various key formats:
-- Simple keys: `f9`, `space`, `enter`
-- Arrow keys: `left`, `right`, `up`, `down`
-- Letter keys: `w`, `a`, `s`, `d`
-- Key combinations: `ctrl+shift+s`, `alt+f12`
-
 #### Keyboard Control
 ```json
 {
@@ -177,8 +167,6 @@ The script supports various key formats:
       "movement": {
         "horizontal_steps": 36,
         "vertical_steps": 18,
-        "horizontal_movement_duration": 0.1,
-        "vertical_movement_duration": 0.1,
         "pause_between_moves": 0.3
       },
       "controls": {
@@ -186,7 +174,9 @@ The script supports various key formats:
           "left": "left",
           "right": "right",
           "up": "up",
-          "down": "down"
+          "down": "down",
+          "horizontal_movement_duration": 0.1,
+          "vertical_movement_duration": 0.1
         }
       }
     }
@@ -199,6 +189,8 @@ The script supports various key formats:
 - `right` the key to move the camera right
 - `up` the key to move the camera up
 - `down` the key to move the camera down
+- `horizontal_movement_duration`: How long to hold horizontal movement (seconds)
+- `vertical_movement_duration`: How long to hold vertical movement (seconds)
 
 #### Gamepad Configuration
 
@@ -210,15 +202,15 @@ The script supports various key formats:
       "movement": {
         "horizontal_steps": 36,
         "vertical_steps": 18,
-        "horizontal_movement_duration": 0.1,
-        "vertical_movement_duration": 0.1,
         "pause_between_moves": 0.3
       },
       "controls": {
         "gamepad": {
-          "stick_movement_amount": 0.8
+          "stick_movement_amount": 0.8,
+           "horizontal_movement_duration": 0.1,
+           "vertical_movement_duration": 0.1
         }
-      },
+      }
     }
   }
 }
@@ -226,6 +218,8 @@ The script supports various key formats:
 
 **Control Settings:**
 - `stick_movement_amount` controls how far to move the right stick (0.1-1.0)
+- `horizontal_movement_duration`: How long to hold horizontal movement (seconds)
+- `vertical_movement_duration`: How long to hold vertical movement (seconds)
 
 #### Mouse Configuration
 
@@ -237,22 +231,22 @@ The script supports various key formats:
       "movement": {
         "horizontal_steps": 36,
         "vertical_steps": 18,
-        "horizontal_movement_duration": 0.1,
-        "vertical_movement_duration": 0.1,
         "pause_between_moves": 0.3
       },
       "controls": {
         "mouse": {
-          "sensitivity": 200
+          "vertical_sensitivity": 500,
+          "horizontal_sensitivity": 200
         }
-      },
+      }
     }
   }
 }
 ```
 
 **Control Settings:**
-- `sensitivity` controls mouse movement distance in pixels (10-500)
+- `vertical_sensitivity` controls vertical mouse movement distance in pixels (10-500)
+- `horizontal_sensitivity` controls horizontal mouse movement distance in pixels (10-500)
 
 #### Screenshot Configuration
 
@@ -265,7 +259,7 @@ The script supports various key formats:
         "shortcut_key": "f9",
         "delay": 0.5,
         "pause": 0.8
-      },
+      }
     }
   }
 }
@@ -281,7 +275,7 @@ The script supports various key formats:
          "pause": 0.8,
          "monitor": 1,
          "path": "./screenshots/"
-      },
+      }
     }
   }
 }

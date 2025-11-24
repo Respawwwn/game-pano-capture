@@ -20,12 +20,15 @@ class TestMouseVerticalCommand:
                     "movement": {
                         "horizontal_steps": 6,
                         "vertical_steps": 4,
-                        "horizontal_movement_duration": 0.2,
-                        "vertical_movement_duration": 0.25,
                         "pause_between_moves": 0.1,
                     },
                     "screenshot": {"key": "f12", "delay": 0.2, "pause": 0.15},
-                    "controls": {"mouse": {"sensitivity": 40}},
+                    "controls": {
+                        "mouse": {
+                            "horizontal_sensitivity": 60,
+                            "vertical_sensitivity": 40,
+                        }
+                    },
                 }
             }
         }
@@ -62,7 +65,8 @@ class TestMouseVerticalCommand:
         # Check that it shows the configuration details
         assert "Testing Vertical Movement for 'mousegame'" in output
         assert "Vertical steps configured: 4" in output
-        assert "Vertical movement duration: 0.25s" in output
+        # Mouse controls don't show movement duration (instantaneous movements)
+        assert "Vertical movement duration:" not in output
         assert "Pause between moves: 0.1s" in output
 
         # Check that it explains the test purpose
@@ -137,8 +141,6 @@ class TestMouseVerticalCommand:
                     "movement": {
                         "horizontal_steps": 6,
                         "vertical_steps": 3,
-                        "horizontal_movement_duration": 0.2,
-                        "vertical_movement_duration": 0.25,
                         "pause_between_moves": 0.1,
                     },
                     "screenshot": {"key": "f12", "delay": 0.2, "pause": 0.15},

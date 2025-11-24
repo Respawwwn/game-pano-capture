@@ -20,13 +20,18 @@ class TestKeyboardVerticalCommand:
                     "movement": {
                         "horizontal_steps": 8,
                         "vertical_steps": 4,
-                        "horizontal_movement_duration": 0.1,
-                        "vertical_movement_duration": 0.2,
                         "pause_between_moves": 0.05,
                     },
                     "screenshot": {"key": "f9", "delay": 0.1, "pause": 0.1},
                     "controls": {
-                        "keyboard": {"left": "a", "right": "d", "up": "w", "down": "s"}
+                        "keyboard": {
+                            "left": "a",
+                            "right": "d",
+                            "up": "w",
+                            "down": "s",
+                            "horizontal_movement_duration": 0.1,
+                            "vertical_movement_duration": 0.2,
+                        }
                     },
                 }
             }
@@ -140,8 +145,6 @@ class TestKeyboardVerticalCommand:
                     "movement": {
                         "horizontal_steps": 8,
                         "vertical_steps": 3,
-                        "horizontal_movement_duration": 0.1,
-                        "vertical_movement_duration": 0.2,
                         "pause_between_moves": 0.05,
                     },
                     "screenshot": {"key": "f9", "delay": 0.1, "pause": 0.1},
@@ -150,6 +153,8 @@ class TestKeyboardVerticalCommand:
                             "left": "a",
                             "right": "d",
                             "up": "w",
+                            "horizontal_movement_duration": 0.1,
+                            "vertical_movement_duration": 0.2,
                             # Note: "down" is intentionally missing
                         }
                     },

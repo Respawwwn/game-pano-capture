@@ -250,8 +250,6 @@ class ConfigManager:
                 "movement": {
                     "horizontal_steps": DEFAULT_HORIZONTAL_STEPS,
                     "vertical_steps": DEFAULT_VERTICAL_STEPS,
-                    "horizontal_movement_duration": DEFAULT_HORIZONTAL_MOVEMENT_DURATION,
-                    "vertical_movement_duration": DEFAULT_VERTICAL_MOVEMENT_DURATION,
                     "pause_between_moves": DEFAULT_PAUSE_BETWEEN_MOVES,
                 },
                 "screenshot_type": DEFAULT_SCREENSHOT_TYPE,
@@ -266,11 +264,18 @@ class ConfigManager:
                         "right": DEFAULT_KEY_RIGHT,
                         "up": DEFAULT_KEY_UP,
                         "down": DEFAULT_KEY_DOWN,
+                        "horizontal_movement_duration": DEFAULT_HORIZONTAL_MOVEMENT_DURATION,
+                        "vertical_movement_duration": DEFAULT_VERTICAL_MOVEMENT_DURATION,
                     },
                     "gamepad": {
-                        "stick_movement_amount": DEFAULT_GAMEPAD_STICK_MOVEMENT
+                        "stick_movement_amount": DEFAULT_GAMEPAD_STICK_MOVEMENT,
+                        "horizontal_movement_duration": DEFAULT_HORIZONTAL_MOVEMENT_DURATION,
+                        "vertical_movement_duration": DEFAULT_VERTICAL_MOVEMENT_DURATION,
                     },
-                    "mouse": {"sensitivity": DEFAULT_MOUSE_SENSITIVITY},
+                    "mouse": {
+                        "vertical_sensitivity": DEFAULT_MOUSE_SENSITIVITY,
+                        "horizontal_sensitivity": DEFAULT_MOUSE_SENSITIVITY,
+                    },
                 },
             },
             "games": {
@@ -280,8 +285,6 @@ class ConfigManager:
                     "movement": {
                         "horizontal_steps": DEFAULT_HORIZONTAL_STEPS,
                         "vertical_steps": DEFAULT_VERTICAL_STEPS,
-                        "horizontal_movement_duration": DEFAULT_HORIZONTAL_MOVEMENT_DURATION,
-                        "vertical_movement_duration": DEFAULT_VERTICAL_MOVEMENT_DURATION,
                         "pause_between_moves": DEFAULT_PAUSE_BETWEEN_MOVES,
                     },
                     "screenshot_type": DEFAULT_SCREENSHOT_TYPE,
@@ -296,6 +299,8 @@ class ConfigManager:
                             "right": DEFAULT_KEY_RIGHT,
                             "up": DEFAULT_KEY_UP,
                             "down": DEFAULT_KEY_DOWN,
+                            "horizontal_movement_duration": DEFAULT_HORIZONTAL_MOVEMENT_DURATION,
+                            "vertical_movement_duration": DEFAULT_VERTICAL_MOVEMENT_DURATION,
                         }
                     },
                 }
