@@ -182,9 +182,9 @@ jobs:
           - os: ubuntu-latest
             platform: linux
             executable: pano-capture
-          - os: windows-latest
-            platform: windows
-            executable: pano-capture.exe
+#           - os: windows-latest
+#             platform: windows
+#             executable: pano-capture.exe
           - os: macos-latest
             platform: macos
             executable: pano-capture
@@ -211,33 +211,33 @@ jobs:
         fi
       shell: bash
 
-    - name: Install ViGEmBus driver (Windows only)
-      if: matrix.os == 'windows-latest'
-      timeout-minutes: 5
-      run: |
-        try {
-          # Download ViGEmBus driver
-          $url = "https://github.com/nefarius/ViGEmBus/releases/latest/download/ViGEmBus_1.22.0_x64_x86_arm64.exe"
-          $output = "ViGEmBus.exe"
-          Write-Output "Downloading ViGEmBus driver..."
-          Invoke-WebRequest -Uri $url -OutFile $output -TimeoutSec 30
-
-          # Try silent installation with timeout
-          Write-Output "Attempting silent installation..."
-          $process = Start-Process -FilePath $output -ArgumentList "/SILENT", "/NORESTART" -PassThru -NoNewWindow
-          $process | Wait-Process -Timeout 120 -ErrorAction SilentlyContinue
-
-          if (!$process.HasExited) {
-            Write-Output "Installation process timed out, killing it..."
-            $process | Stop-Process -Force
-          }
-
-          Write-Output "ViGEmBus driver installation attempted (may require manual verification)"
-        } catch {
-          Write-Output "ViGEmBus installation failed: $($_.Exception.Message)"
-          Write-Output "Continuing build without ViGEmBus driver..."
-        }
-      shell: powershell
+#     - name: Install ViGEmBus driver (Windows only)
+#       if: matrix.os == 'windows-latest'
+#       timeout-minutes: 5
+#       run: |
+#         try {
+#           # Download ViGEmBus driver
+#           $url = "https://github.com/nefarius/ViGEmBus/releases/latest/download/ViGEmBus_1.22.0_x64_x86_arm64.exe"
+#           $output = "ViGEmBus.exe"
+#           Write-Output "Downloading ViGEmBus driver..."
+#           Invoke-WebRequest -Uri $url -OutFile $output -TimeoutSec 30
+#
+#           # Try silent installation with timeout
+#           Write-Output "Attempting silent installation..."
+#           $process = Start-Process -FilePath $output -ArgumentList "/SILENT", "/NORESTART" -PassThru -NoNewWindow
+#           $process | Wait-Process -Timeout 120 -ErrorAction SilentlyContinue
+#
+#           if (!$process.HasExited) {
+#             Write-Output "Installation process timed out, killing it..."
+#             $process | Stop-Process -Force
+#           }
+#
+#           Write-Output "ViGEmBus driver installation attempted (may require manual verification)"
+#         } catch {
+#           Write-Output "ViGEmBus installation failed: $($_.Exception.Message)"
+#           Write-Output "Continuing build without ViGEmBus driver..."
+#         }
+#       shell: powershell
 
     - name: Install build dependencies
       run: |
