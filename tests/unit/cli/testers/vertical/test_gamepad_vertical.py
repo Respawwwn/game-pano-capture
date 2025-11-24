@@ -20,12 +20,16 @@ class TestGamepadVerticalCommand:
                     "movement": {
                         "horizontal_steps": 5,
                         "vertical_steps": 4,
-                        "horizontal_movement_duration": 0.3,
-                        "vertical_movement_duration": 0.35,
                         "pause_between_moves": 0.15,
                     },
                     "screenshot": {"key": "f11", "delay": 0.3, "pause": 0.2},
-                    "controls": {"gamepad": {"stick_movement_amount": 0.6}},
+                    "controls": {
+                        "gamepad": {
+                            "stick_movement_amount": 0.6,
+                            "horizontal_movement_duration": 0.3,
+                            "vertical_movement_duration": 0.35,
+                        }
+                    },
                 }
             }
         }
@@ -136,13 +140,13 @@ class TestGamepadVerticalCommand:
                     "movement": {
                         "horizontal_steps": 5,
                         "vertical_steps": 3,
-                        "horizontal_movement_duration": 0.3,
-                        "vertical_movement_duration": 0.35,
                         "pause_between_moves": 0.15,
                     },
                     "screenshot": {"key": "f11", "delay": 0.3, "pause": 0.2},
                     "controls": {
                         "gamepad": {
+                            "horizontal_movement_duration": 0.3,
+                            "vertical_movement_duration": 0.35,
                             # Note: "stick_movement_amount" is intentionally missing
                         }
                     },

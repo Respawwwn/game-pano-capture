@@ -20,8 +20,6 @@ class TestMouseHorizontalCommand:
                     "movement": {
                         "horizontal_steps": 6,
                         "vertical_steps": 3,
-                        "horizontal_movement_duration": 0.2,
-                        "vertical_movement_duration": 0.15,
                         "pause_between_moves": 0.1,
                     },
                     "screenshot": {"key": "f12", "delay": 0.2, "pause": 0.15},
@@ -67,7 +65,8 @@ class TestMouseHorizontalCommand:
         # Check that it shows the configuration details
         assert "Testing Horizontal Rotation for 'mousegame'" in output
         assert "Horizontal steps configured: 6" in output
-        assert "Horizontal movement duration: 0.2s" in output
+        # Mouse controls don't show movement duration (instantaneous movements)
+        assert "Horizontal movement duration:" not in output
         assert "Pause between moves: 0.1s" in output
 
         # Check that it explains the test purpose
@@ -141,7 +140,6 @@ class TestMouseHorizontalCommand:
                     "control_type": "mouse",
                     "movement": {
                         "horizontal_steps": 4,
-                        "horizontal_movement_duration": 0.2,
                         "pause_between_moves": 0.1,
                     },
                     "screenshot": {"key": "f12", "delay": 0.2, "pause": 0.15},
