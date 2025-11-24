@@ -270,7 +270,10 @@ class ConfigManager:
                     "gamepad": {
                         "stick_movement_amount": DEFAULT_GAMEPAD_STICK_MOVEMENT
                     },
-                    "mouse": {"sensitivity": DEFAULT_MOUSE_SENSITIVITY},
+                    "mouse": {
+                        "vertical_sensitivity": DEFAULT_MOUSE_SENSITIVITY,
+                        "horizontal_sensitivity": DEFAULT_MOUSE_SENSITIVITY,
+                    },
                 },
             },
             "games": {

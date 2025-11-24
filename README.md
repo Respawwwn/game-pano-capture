@@ -243,16 +243,18 @@ The script supports various key formats:
       },
       "controls": {
         "mouse": {
-          "sensitivity": 200
+          "vertical_sensitivity": 500,
+          "horizontal_sensitivity": 200
         }
-      },
+      }
     }
   }
 }
 ```
 
 **Control Settings:**
-- `sensitivity` controls mouse movement distance in pixels (10-500)
+- `vertical_sensitivity` controls vertical mouse movement distance in pixels (10-500)
+- `horizontal_sensitivity` controls horizontal mouse movement distance in pixels (10-500)
 
 #### Screenshot Configuration
 

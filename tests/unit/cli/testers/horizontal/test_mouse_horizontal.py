@@ -25,7 +25,12 @@ class TestMouseHorizontalCommand:
                         "pause_between_moves": 0.1,
                     },
                     "screenshot": {"key": "f12", "delay": 0.2, "pause": 0.15},
-                    "controls": {"mouse": {"sensitivity": 50}},
+                    "controls": {
+                        "mouse": {
+                            "horizontal_sensitivity": 50,
+                            "vertical_sensitivity": 75,
+                        }
+                    },
                 }
             }
         }

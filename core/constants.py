@@ -83,7 +83,8 @@ class ConfigDefaults:
     def get_mouse_defaults():
         """Get default mouse control configuration."""
         return {
-            "sensitivity": DEFAULT_MOUSE_SENSITIVITY,
+            "vertical_sensitivity": DEFAULT_MOUSE_SENSITIVITY,
+            "horizontal_sensitivity": DEFAULT_MOUSE_SENSITIVITY,
         }
 
     @staticmethod

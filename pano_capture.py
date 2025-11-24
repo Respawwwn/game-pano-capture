@@ -205,21 +205,26 @@ class GamePanoCapture:
 
             # Get mouse movement amount from config
             controls_config = game_config.get("controls", {}).get("mouse", {})
-            sensitivity = controls_config.get("sensitivity", DEFAULT_MOUSE_SENSITIVITY)
+            vertical_sensitivity = controls_config.get(
+                "vertical_sensitivity", DEFAULT_MOUSE_SENSITIVITY
+            )
+            horizontal_sensitivity = controls_config.get(
+                "horizontal_sensitivity", DEFAULT_MOUSE_SENSITIVITY
+            )
 
             # Map directions to mouse movements
             if direction == "right":
-                mouse_x = sensitivity
+                mouse_x = horizontal_sensitivity
                 mouse_y = 0
             elif direction == "left":
-                mouse_x = -sensitivity
+                mouse_x = -horizontal_sensitivity
                 mouse_y = 0
             elif direction == "up":
                 mouse_x = 0
-                mouse_y = -sensitivity  # Negative Y is up for mouse
+                mouse_y = -vertical_sensitivity  # Negative Y is up for mouse
             elif direction == "down":
                 mouse_x = 0
-                mouse_y = sensitivity  # Positive Y is down for mouse
+                mouse_y = vertical_sensitivity  # Positive Y is down for mouse
             else:
                 print(f"Unknown direction: {direction}")
                 return
@@ -231,8 +236,6 @@ class GamePanoCapture:
                 success = self.mouse_handler.move_relative(mouse_x, mouse_y)
                 if success:
                     print(f"Successfully moved mouse by ({mouse_x}, {mouse_y})")
-                    # Hold the movement for the specified duration
-                    time.sleep(movement_duration)
                 else:
                     print("Failed to move mouse - check handler availability")
 
@@ -478,11 +481,15 @@ class GamePanoCapture:
             }
             print("Virtual gamepad support implemented using vgamepad!")
         elif control_type == "mouse":
-            sensitivity = input(
-                f"Mouse sensitivity in pixels (10-500) [{DEFAULT_MOUSE_SENSITIVITY}]: "
+            vertical_sensitivity = input(
+                f"Mouse vertical sensitivity in pixels (10-500) [{DEFAULT_MOUSE_SENSITIVITY}]: "
+            ) or str(DEFAULT_MOUSE_SENSITIVITY)
+            horizontal_sensitivity = input(
+                f"Mouse horizontal sensitivity in pixels (10-500) [{DEFAULT_MOUSE_SENSITIVITY}]: "
             ) or str(DEFAULT_MOUSE_SENSITIVITY)
             config["controls"]["mouse"] = {
-                "sensitivity": int(sensitivity),
+                "vertical_sensitivity": int(vertical_sensitivity),
+                "horizontal_sensitivity": int(horizontal_sensitivity),
             }
             print("Mouse control configured!")
 
