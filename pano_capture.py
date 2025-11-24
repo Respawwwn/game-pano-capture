@@ -845,25 +845,25 @@ def main():
         print("360° Game Screenshot Automation")
         print("Usage examples:")
         print(
-            "  python3 pano_capture.py --setup 'My Game'              # Setup new game config"
+            "  python pano_capture.py --setup 'My Game'              # Setup new game config"
         )
         print(
-            "  python3 pano_capture.py --capture 'My Game'            # Capture panorama"
+            "  python pano_capture.py --capture 'My Game'            # Capture panorama"
         )
         print(
-            "  python3 pano_capture.py --test-horizontal 'My Game'    # Test horizontal (360°) rotation"
+            "  python pano_capture.py --test-horizontal 'My Game'    # Test horizontal (360°) rotation"
         )
         print(
-            "  python3 pano_capture.py --test-vertical 'My Game'      # Test vertical (zenith to nadir) movement"
+            "  python pano_capture.py --test-vertical 'My Game'      # Test vertical (zenith to nadir) movement"
         )
         print(
-            "  python3 pano_capture.py --test-screenshot 'My Game'    # Test screenshot tool functionality"
+            "  python pano_capture.py --test-screenshot 'My Game'    # Test screenshot tool functionality"
         )
         print(
-            "  python3 pano_capture.py --calculate 'My Game'          # Calculate capture statistics and time"
+            "  python pano_capture.py --calculate 'My Game'          # Calculate capture statistics and time"
         )
         print(
-            "  python3 pano_capture.py --list                         # List configured games"
+            "  python pano_capture.py --list                         # List configured games"
         )
 
 
