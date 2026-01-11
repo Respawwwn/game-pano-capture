@@ -204,6 +204,21 @@ class WindowsMouseHandler(IMouseHandler):
         Returns:
             True if successful, False otherwise
         """
+        # Use press and release for consistent behavior
+        if not self.press(button):
+            return False
+        return self.release(button)
+
+    def press(self, button: str = "left") -> bool:
+        """
+        Press and hold a mouse button without releasing.
+
+        Args:
+            button: Mouse button to press ('left', 'right', 'middle')
+
+        Returns:
+            True if successful, False otherwise
+        """
         if not self.is_available():
             self._logger.error("Mouse handler not available")
             return False
@@ -237,22 +252,79 @@ class WindowsMouseHandler(IMouseHandler):
 
         try:
             if WIN32_AVAILABLE:
-                # Use win32api for mouse click
+                # Use win32api for mouse button press
                 win32api.mouse_event(down_event, 0, 0, 0, 0)
-                win32api.mouse_event(up_event, 0, 0, 0, 0)
-                self._logger.debug(f"Clicked {button} mouse button using win32api")
+                self._logger.debug(f"Pressed {button} mouse button using win32api")
                 return True
             elif CTYPES_AVAILABLE:
-                # Use ctypes for mouse click
+                # Use ctypes for mouse button press
                 ctypes.windll.user32.mouse_event(down_event, 0, 0, 0, 0)
-                ctypes.windll.user32.mouse_event(up_event, 0, 0, 0, 0)
-                self._logger.debug(f"Clicked {button} mouse button using ctypes")
+                self._logger.debug(f"Pressed {button} mouse button using ctypes")
                 return True
             else:
                 return False
 
         except Exception as e:
-            self._logger.error(f"Failed to click mouse button: {e}")
+            self._logger.error(f"Failed to press mouse button: {e}")
+            return False
+
+    def release(self, button: str = "left") -> bool:
+        """
+        Release a previously pressed mouse button.
+
+        Args:
+            button: Mouse button to release ('left', 'right', 'middle')
+
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self.is_available():
+            self._logger.error("Mouse handler not available")
+            return False
+
+        if WIN32_AVAILABLE:
+            button_events = {
+                "left": (win32con.MOUSEEVENTF_LEFTDOWN, win32con.MOUSEEVENTF_LEFTUP),
+                "right": (win32con.MOUSEEVENTF_RIGHTDOWN, win32con.MOUSEEVENTF_RIGHTUP),
+                "middle": (
+                    win32con.MOUSEEVENTF_MIDDLEDOWN,
+                    win32con.MOUSEEVENTF_MIDDLEUP,
+                ),
+            }
+        else:
+            # ctypes constants
+            button_events = {
+                "left": (0x0002, 0x0004),  # MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP
+                "right": (0x0008, 0x0010),  # MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP
+                "middle": (
+                    0x0020,
+                    0x0040,
+                ),  # MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP
+            }
+
+        button_config = button_events.get(button.lower())
+        if button_config is None:
+            self._logger.error(f"Invalid button: {button}")
+            return False
+
+        down_event, up_event = button_config
+
+        try:
+            if WIN32_AVAILABLE:
+                # Use win32api for mouse button release
+                win32api.mouse_event(up_event, 0, 0, 0, 0)
+                self._logger.debug(f"Released {button} mouse button using win32api")
+                return True
+            elif CTYPES_AVAILABLE:
+                # Use ctypes for mouse button release
+                ctypes.windll.user32.mouse_event(up_event, 0, 0, 0, 0)
+                self._logger.debug(f"Released {button} mouse button using ctypes")
+                return True
+            else:
+                return False
+
+        except Exception as e:
+            self._logger.error(f"Failed to release mouse button: {e}")
             return False
 
     def scroll(self, dx: int = 0, dy: int = 0) -> bool:

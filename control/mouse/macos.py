@@ -168,6 +168,21 @@ class MacOSMouseHandler(IMouseHandler):
         Returns:
             True if successful, False otherwise
         """
+        # Use press and release for consistent behavior
+        if not self.press(button):
+            return False
+        return self.release(button)
+
+    def press(self, button: str = "left") -> bool:
+        """
+        Press and hold a mouse button without releasing.
+
+        Args:
+            button: Mouse button to press ('left', 'right', 'middle')
+
+        Returns:
+            True if successful, False otherwise
+        """
         if not self.is_available():
             self._logger.error("Mouse handler not available")
             return False
@@ -195,17 +210,55 @@ class MacOSMouseHandler(IMouseHandler):
             )
             CGEventPost(kCGHIDEventTap, mouse_down)
 
+            self._logger.debug(f"Pressed {button} mouse button")
+            return True
+
+        except Exception as e:
+            self._logger.error(f"Failed to press mouse button: {e}")
+            return False
+
+    def release(self, button: str = "left") -> bool:
+        """
+        Release a previously pressed mouse button.
+
+        Args:
+            button: Mouse button to release ('left', 'right', 'middle')
+
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self.is_available():
+            self._logger.error("Mouse handler not available")
+            return False
+
+        button_events = {
+            "left": (kCGEventLeftMouseDown, kCGEventLeftMouseUp, 0),
+            "right": (kCGEventRightMouseDown, kCGEventRightMouseUp, 1),
+            "middle": (kCGEventOtherMouseDown, kCGEventOtherMouseUp, 2),
+        }
+
+        button_config = button_events.get(button.lower())
+        if button_config is None:
+            self._logger.error(f"Invalid button: {button}")
+            return False
+
+        down_event, up_event, button_num = button_config
+
+        try:
+            # Get current mouse position
+            x, y = self.get_position()
+
             # Create and post mouse up event
             mouse_up = CGEventCreateMouseEvent(
                 self._event_source, up_event, (x, y), button_num
             )
             CGEventPost(kCGHIDEventTap, mouse_up)
 
-            self._logger.debug(f"Clicked {button} mouse button")
+            self._logger.debug(f"Released {button} mouse button")
             return True
 
         except Exception as e:
-            self._logger.error(f"Failed to click mouse button: {e}")
+            self._logger.error(f"Failed to release mouse button: {e}")
             return False
 
     def scroll(self, dx: int = 0, dy: int = 0) -> bool:
