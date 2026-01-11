@@ -75,6 +75,41 @@ class IMouseHandler(ABC):
         """
 
     @abstractmethod
+    def press(self, button: str = "left") -> bool:
+        """
+        Press and hold a mouse button without releasing.
+
+        This method is used for drag operations where the button needs to
+        remain pressed while other actions (like mouse movement) occur.
+
+        Args:
+            button: Mouse button to press ('left', 'right', 'middle')
+
+        Returns:
+            True if successful, False otherwise
+
+        Raises:
+            NotImplementedError: If the method is not implemented
+        """
+
+    @abstractmethod
+    def release(self, button: str = "left") -> bool:
+        """
+        Release a previously pressed mouse button.
+
+        This method complements press() to complete drag operations.
+
+        Args:
+            button: Mouse button to release ('left', 'right', 'middle')
+
+        Returns:
+            True if successful, False otherwise
+
+        Raises:
+            NotImplementedError: If the method is not implemented
+        """
+
+    @abstractmethod
     def scroll(self, dx: int = 0, dy: int = 0) -> bool:
         """
         Scroll the mouse wheel.

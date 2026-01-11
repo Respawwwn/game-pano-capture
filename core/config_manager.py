@@ -233,6 +233,7 @@ class ConfigManager:
             DEFAULT_KEY_LEFT,
             DEFAULT_KEY_RIGHT,
             DEFAULT_KEY_UP,
+            DEFAULT_MOUSE_DRAG_BUTTON,
             DEFAULT_MOUSE_SENSITIVITY,
             DEFAULT_PAUSE_BETWEEN_MOVES,
             DEFAULT_SCREENSHOT_DELAY,
@@ -275,6 +276,7 @@ class ConfigManager:
                     "mouse": {
                         "vertical_sensitivity": DEFAULT_MOUSE_SENSITIVITY,
                         "horizontal_sensitivity": DEFAULT_MOUSE_SENSITIVITY,
+                        "drag_button": DEFAULT_MOUSE_DRAG_BUTTON,
                     },
                 },
             },

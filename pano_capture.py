@@ -18,6 +18,8 @@ from core.constants import (
     DEFAULT_GAMEPAD_STICK_MOVEMENT,
     DEFAULT_HORIZONTAL_MOVEMENT_DURATION,
     DEFAULT_HORIZONTAL_STEPS,
+    DEFAULT_MOUSE_DRAG_PRESS_DELAY,
+    DEFAULT_MOUSE_DRAG_RELEASE_DELAY,
     DEFAULT_MOUSE_SENSITIVITY,
     DEFAULT_PAUSE_BETWEEN_MOVES,
     DEFAULT_SCREENSHOT_DELAY,
@@ -26,6 +28,7 @@ from core.constants import (
     DEFAULT_SCREENSHOT_TYPE,
     DEFAULT_VERTICAL_MOVEMENT_DURATION,
     DEFAULT_VERTICAL_STEPS,
+    SUPPORTED_MOUSE_BUTTONS,
 )
 from screenshot import create_handler
 
@@ -223,6 +226,14 @@ class GamePanoCapture:
                 "horizontal_sensitivity", DEFAULT_MOUSE_SENSITIVITY
             )
 
+            # Get drag button configuration
+            drag_button = controls_config.get("drag_button", None)
+
+            # Validate drag_button value
+            if drag_button and drag_button not in SUPPORTED_MOUSE_BUTTONS:
+                print(f"Warning: Invalid drag_button '{drag_button}', ignoring")
+                drag_button = None
+
             # Map directions to mouse movements
             if direction == "right":
                 mouse_x = horizontal_sensitivity
@@ -242,13 +253,42 @@ class GamePanoCapture:
 
             # Use platform-specific mouse handler for relative movement
             try:
-                print(f"Moving mouse: {direction} (relative x={mouse_x}, y={mouse_y})")
-
-                success = self.mouse_handler.move_relative(mouse_x, mouse_y)
-                if success:
-                    print(f"Successfully moved mouse by ({mouse_x}, {mouse_y})")
+                if drag_button:
+                    print(
+                        f"Moving mouse with {drag_button} button held: {direction} (relative x={mouse_x}, y={mouse_y})"
+                    )
                 else:
-                    print("Failed to move mouse - check handler availability")
+                    print(
+                        f"Moving mouse: {direction} (relative x={mouse_x}, y={mouse_y})"
+                    )
+
+                # Perform drag operation if drag_button is configured
+                try:
+                    if drag_button:
+                        # Press button before movement
+                        if not self.mouse_handler.press(drag_button):
+                            print(f"Failed to press {drag_button} button")
+                            return
+                        time.sleep(DEFAULT_MOUSE_DRAG_PRESS_DELAY)
+
+                    # Perform movement
+                    success = self.mouse_handler.move_relative(mouse_x, mouse_y)
+
+                    if success:
+                        if drag_button:
+                            print(
+                                f"Successfully moved mouse by ({mouse_x}, {mouse_y}) with {drag_button} button held"
+                            )
+                        else:
+                            print(f"Successfully moved mouse by ({mouse_x}, {mouse_y})")
+                    else:
+                        print("Failed to move mouse - check handler availability")
+
+                finally:
+                    # Always release button if it was pressed
+                    if drag_button:
+                        time.sleep(DEFAULT_MOUSE_DRAG_RELEASE_DELAY)
+                        self.mouse_handler.release(drag_button)
 
             except Exception as e:
                 print(f"Error moving mouse: {e}")
@@ -512,9 +552,26 @@ class GamePanoCapture:
             horizontal_sensitivity = input(
                 f"Mouse horizontal sensitivity in pixels (10-500) [{DEFAULT_MOUSE_SENSITIVITY}]: "
             ) or str(DEFAULT_MOUSE_SENSITIVITY)
+
+            print("\nSome games require holding a mouse button to rotate the camera")
+            print("(e.g., right-click drag in strategy games, some FPS games)")
+            drag_button = (
+                input(
+                    "Hold mouse button during movement? (none/left/right/middle) [none]: "
+                ).lower()
+                or "none"
+            )
+
+            if drag_button == "none":
+                drag_button = None
+            elif drag_button not in ["left", "right", "middle"]:
+                print(f"Invalid button '{drag_button}', using 'none'")
+                drag_button = None
+
             config["controls"]["mouse"] = {
                 "vertical_sensitivity": int(vertical_sensitivity),
                 "horizontal_sensitivity": int(horizontal_sensitivity),
+                "drag_button": drag_button,
             }
             print("Mouse control configured!")
 

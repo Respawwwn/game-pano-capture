@@ -21,6 +21,9 @@ DEFAULT_SCREENSHOT_PAUSE = 0.3
 # Default control configuration
 DEFAULT_GAMEPAD_STICK_MOVEMENT = 0.8
 DEFAULT_MOUSE_SENSITIVITY = 100
+DEFAULT_MOUSE_DRAG_BUTTON = None
+DEFAULT_MOUSE_DRAG_PRESS_DELAY = 0.02  # 20ms delay after button press
+DEFAULT_MOUSE_DRAG_RELEASE_DELAY = 0.02  # 20ms delay before button release
 
 # Default keyboard keys
 DEFAULT_KEY_LEFT = "left"
@@ -31,6 +34,7 @@ DEFAULT_KEY_DOWN = "down"
 # Application configuration
 DEFAULT_CONFIG_VERSION = "2.0"
 SUPPORTED_CONTROL_TYPES = ["keyboard", "gamepad", "mouse"]
+SUPPORTED_MOUSE_BUTTONS = ["left", "right", "middle"]
 
 # Timing constants
 CAPTURE_COUNTDOWN_SECONDS = 5
@@ -89,6 +93,7 @@ class ConfigDefaults:
         return {
             "vertical_sensitivity": DEFAULT_MOUSE_SENSITIVITY,
             "horizontal_sensitivity": DEFAULT_MOUSE_SENSITIVITY,
+            "drag_button": DEFAULT_MOUSE_DRAG_BUTTON,
         }
 
     @staticmethod
