@@ -93,7 +93,7 @@ You'll be prompted to configure:
 - Navigate to the desired location
 - Setup your capture region in your screenshot tool
 - Enter photo mode
-- Position camera at zenith (straight up)
+- Position camera at zenith (straight up) or nadir (straight down)
 
 ### 3. Test Configuration
 
@@ -133,6 +133,9 @@ python pano_capture.py --capture "Cyberpunk 2077"
 - `movement.horizontal_steps`: Number of steps for complete horizontal rotation
 - `movement.vertical_steps`: Number of steps from zenith to nadir
 - `movement.pause_between_moves`: Delay between camera movements (seconds)
+- `movement.start_on`: Starting position for the capture — `"zenith"` (default) or `"nadir"`
+    - `"zenith"`: camera starts straight up and moves **down** each ring toward nadir
+    - `"nadir"`: camera starts straight down and moves **up** each ring toward zenith
 
 ### Screenshot Settings
 - `screenshot_type`: "external_app" (uses external tool) or "built_in" (direct capture)
@@ -167,7 +170,8 @@ The script supports various key formats:
       "movement": {
         "horizontal_steps": 36,
         "vertical_steps": 18,
-        "pause_between_moves": 0.3
+        "pause_between_moves": 0.3,
+        "start_on": "nadir"
       },
       "controls": {
         "keyboard": {
@@ -288,7 +292,26 @@ The script supports various key formats:
 - `delay` seconds to wait before taking screenshot (to allow camera to stabilize and game assets to load)
 - `pause` seconds to wait after taking screenshot (to avoid overwhelming the screenshot tool)
 - `monitor` monitor number to capture from (1-based index)
-- `path` screenshot save directory 
+- `path` screenshot save directory
+
+#### Start Position Configuration
+
+```json
+{
+  "games": {
+    "Cyberpunk 2077 (Zenith Start)": {
+      "movement": { "start_on": "zenith" }
+    },
+    "Cyberpunk 2077 (Nadir Start)": {
+      "movement": { "start_on": "nadir" }
+    }
+  }
+}
+```
+
+- `"zenith"` (default): camera begins straight up, moves **down** ring by ring toward nadir
+- `"nadir"`: camera begins straight down, moves **up** ring by ring toward zenith
+- Missing or invalid values silently default to `"zenith"`
 
 ## Command Reference
 
