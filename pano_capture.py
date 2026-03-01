@@ -26,9 +26,11 @@ from core.constants import (
     DEFAULT_SCREENSHOT_KEY,
     DEFAULT_SCREENSHOT_PAUSE,
     DEFAULT_SCREENSHOT_TYPE,
+    DEFAULT_START_ON,
     DEFAULT_VERTICAL_MOVEMENT_DURATION,
     DEFAULT_VERTICAL_STEPS,
     SUPPORTED_MOUSE_BUTTONS,
+    SUPPORTED_START_POSITIONS,
 )
 from screenshot import create_handler
 
@@ -326,9 +328,20 @@ class GamePanoCapture:
         screenshot_key = screenshot_config.get("shortcut_key", "f9")
         print(f"Screenshot key: {screenshot_key}")
 
+        start_on = movement_config.get("start_on", DEFAULT_START_ON)
+        if start_on not in SUPPORTED_START_POSITIONS:
+            start_on = DEFAULT_START_ON
+        vertical_direction = "down" if start_on == "zenith" else "up"
+
+        start_position_label = (
+            "zenith position (straight up)"
+            if start_on == "zenith"
+            else "nadir position (straight down)"
+        )
+
         print(f"\nStarting capture in {CAPTURE_COUNTDOWN_SECONDS} seconds...")
         print(
-            "Make sure the game is in focus and camera is at zenith position (straight up)!"
+            f"Make sure the game is in focus and camera is at {start_position_label}!"
         )
         print("Make sure your screenshot tool is ready!")
         screenshot_key = screenshot_config.get("shortcut_key", "f9")
@@ -368,9 +381,9 @@ class GamePanoCapture:
                     if horizontal_step < horizontal_steps - 1:
                         self.move_camera("right", game_config)
 
-                # Move down for next vertical level (except on last vertical step)
+                # Move for next vertical level (except on last vertical step)
                 if vertical_step < vertical_steps:
-                    self.move_camera("down", game_config)
+                    self.move_camera(vertical_direction, game_config)
 
             print("\n=== Capture Complete ===")
             print(f"Total screenshots taken: {self.screenshot_count}")
@@ -385,7 +398,7 @@ class GamePanoCapture:
                     "screenshots_taken": self.screenshot_count,
                     "config_used": game_config,
                     "expected_screenshots": horizontal_steps * (vertical_steps + 1),
-                    "capture_pattern": "spherical_zenith_to_nadir",
+                    "capture_pattern": f"spherical_{start_on}_to_{'nadir' if start_on == 'zenith' else 'zenith'}",
                 }
                 with open(self.debug_output_dir / "session_info.json", "w") as f:
                     json.dump(session_info, f, indent=4)
@@ -482,6 +495,11 @@ class GamePanoCapture:
             input(f"Pause between moves in seconds [{DEFAULT_PAUSE_BETWEEN_MOVES}]: ")
             or str(DEFAULT_PAUSE_BETWEEN_MOVES)
         )
+        start_on = input(
+            f"Starting position (zenith/nadir) [{DEFAULT_START_ON}]: "
+        ).lower()
+        if start_on not in SUPPORTED_START_POSITIONS:
+            start_on = DEFAULT_START_ON
 
         # Create new configuration structure
         config = {
@@ -491,6 +509,7 @@ class GamePanoCapture:
                 "horizontal_steps": horizontal_steps,
                 "vertical_steps": vertical_steps,
                 "pause_between_moves": pause_between_moves,
+                "start_on": start_on,
             },
             "screenshot_type": screenshot_type,
             "screenshot": screenshot_config,
@@ -651,9 +670,21 @@ class GamePanoCapture:
             print("\n=== Test Interrupted ===")
 
     def test_vertical_movement(self, game_name, game_config):
-        """Test vertical movement from zenith to nadir"""
+        """Test vertical movement between zenith and nadir"""
         movement_config = game_config.get("movement", {})
         control_type = game_config.get("control_type", "keyboard")
+
+        start_on = movement_config.get("start_on", DEFAULT_START_ON)
+        if start_on not in SUPPORTED_START_POSITIONS:
+            start_on = DEFAULT_START_ON
+        vertical_direction = "down" if start_on == "zenith" else "up"
+
+        start_label = (
+            "zenith (straight up)" if start_on == "zenith" else "nadir (straight down)"
+        )
+        end_label = (
+            "nadir (straight down)" if start_on == "zenith" else "zenith (straight up)"
+        )
 
         # Get movement duration from control-specific config
         vertical_movement_duration = DEFAULT_VERTICAL_MOVEMENT_DURATION
@@ -672,14 +703,15 @@ class GamePanoCapture:
         print(
             f"Pause between moves: {movement_config.get('pause_between_moves', DEFAULT_PAUSE_BETWEEN_MOVES)}s"
         )
-        print(
-            "\nThis will move the camera from zenith (straight up) to nadir (straight down)."
-        )
-        print("Make sure your camera is positioned at zenith before starting!")
-        print("Watch to see if it reaches exactly nadir (straight down) at the end.")
+        print(f"\nThis will move the camera from {start_label} to {end_label}.")
+        print(f"Make sure your camera is positioned at {start_label} before starting!")
+        print(f"Watch to see if it reaches exactly {end_label} at the end.")
 
         print(f"\nStarting test in {CAPTURE_COUNTDOWN_SECONDS} seconds...")
-        print("Focus the game window and position camera at ZENITH (straight up)!")
+        parenthetical = "straight up" if start_on == "zenith" else "straight down"
+        print(
+            f"Focus the game window and position camera at {start_on.upper()} ({parenthetical})!"
+        )
 
         for i in range(CAPTURE_COUNTDOWN_SECONDS, 0, -1):
             print(f"{i}...")
@@ -693,12 +725,16 @@ class GamePanoCapture:
             )
             for step in range(vertical_steps):
                 print(f"Step {step + 1}/{vertical_steps}")
-                self.move_camera("down", game_config)
+                self.move_camera(vertical_direction, game_config)
 
             print("\n=== Vertical Test Complete ===")
-            print("Did the camera reach exactly nadir (straight bottom)?")
-            print("- If it went too far past nadir: DECREASE 'movement.vertical_steps'")
-            print("- If it didn't reach nadir: INCREASE 'movement.vertical_steps'")
+            print(f"Did the camera reach exactly {end_label}?")
+            print(
+                f"- If it went too far past {end_label.split(' ')[0]}: DECREASE 'movement.vertical_steps'"
+            )
+            print(
+                f"- If it didn't reach {end_label.split(' ')[0]}: INCREASE 'movement.vertical_steps'"
+            )
             print(
                 "- If movement was too fast/slow: adjust 'movement.vertical_movement_duration' and 'movement.pause_between_moves'"
             )
@@ -791,9 +827,19 @@ class GamePanoCapture:
             f"  Total estimated time: {total_time:.1f}s ({total_time / 60:.1f} minutes)"
         )
 
+        start_on = movement_config.get("start_on", DEFAULT_START_ON)
+        if start_on not in SUPPORTED_START_POSITIONS:
+            start_on = DEFAULT_START_ON
+        start_pos = (
+            "Zenith (straight up)" if start_on == "zenith" else "Nadir (straight down)"
+        )
+        end_pos = (
+            "Nadir (straight down)" if start_on == "zenith" else "Zenith (straight up)"
+        )
+
         print("\nCapture pattern:")
-        print("  Start position: Zenith (straight up)")
-        print("  End position: Nadir (straight down)")
+        print(f"  Start position: {start_pos}")
+        print(f"  End position: {end_pos}")
         print(
             f"  Pattern: {vertical_steps + 1} horizontal rings, {horizontal_steps} shots per ring"
         )

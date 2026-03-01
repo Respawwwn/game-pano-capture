@@ -9,7 +9,11 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from .constants import DEFAULT_SCREENSHOT_TYPE
+from .constants import (
+    DEFAULT_SCREENSHOT_TYPE,
+    DEFAULT_START_ON,
+    SUPPORTED_START_POSITIONS,
+)
 
 
 class ConfigManager:
@@ -170,6 +174,8 @@ class ConfigManager:
         for key, value in defaults.get("movement", {}).items():
             if key not in merged_config["movement"]:
                 merged_config["movement"][key] = value
+        if merged_config["movement"].get("start_on") not in SUPPORTED_START_POSITIONS:
+            merged_config["movement"]["start_on"] = DEFAULT_START_ON
 
         # Merge screenshot type
         if "screenshot_type" not in merged_config:
@@ -240,6 +246,7 @@ class ConfigManager:
             DEFAULT_SCREENSHOT_KEY,
             DEFAULT_SCREENSHOT_PAUSE,
             DEFAULT_SCREENSHOT_TYPE,
+            DEFAULT_START_ON,
             DEFAULT_VERTICAL_MOVEMENT_DURATION,
             DEFAULT_VERTICAL_STEPS,
         )
@@ -252,6 +259,7 @@ class ConfigManager:
                     "horizontal_steps": DEFAULT_HORIZONTAL_STEPS,
                     "vertical_steps": DEFAULT_VERTICAL_STEPS,
                     "pause_between_moves": DEFAULT_PAUSE_BETWEEN_MOVES,
+                    "start_on": DEFAULT_START_ON,
                 },
                 "screenshot_type": DEFAULT_SCREENSHOT_TYPE,
                 "screenshot": {
@@ -288,6 +296,7 @@ class ConfigManager:
                         "horizontal_steps": DEFAULT_HORIZONTAL_STEPS,
                         "vertical_steps": DEFAULT_VERTICAL_STEPS,
                         "pause_between_moves": DEFAULT_PAUSE_BETWEEN_MOVES,
+                        "start_on": DEFAULT_START_ON,
                     },
                     "screenshot_type": DEFAULT_SCREENSHOT_TYPE,
                     "screenshot": {

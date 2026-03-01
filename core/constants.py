@@ -35,6 +35,8 @@ DEFAULT_KEY_DOWN = "down"
 DEFAULT_CONFIG_VERSION = "2.0"
 SUPPORTED_CONTROL_TYPES = ["keyboard", "gamepad", "mouse"]
 SUPPORTED_MOUSE_BUTTONS = ["left", "right", "middle"]
+DEFAULT_START_ON = "zenith"
+SUPPORTED_START_POSITIONS = ["zenith", "nadir"]
 
 # Timing constants
 CAPTURE_COUNTDOWN_SECONDS = 5
