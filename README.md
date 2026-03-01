@@ -12,74 +12,58 @@ It systematically moves the camera in a spherical pattern and triggers your scre
 - **Custom screenshot integration**: Uses your preferred screenshot tool via configurable keybinds
 - **Spherical capture pattern**: Follows proper panoramic photography patterns from zenith to nadir
 
-## Prerequisites
+## Installation
 
-- Python 3.7 or higher
-- A screenshot/region capture tool (e.g., ShareX, Greenshot, etc.)
-- Video games with photo mode or freecam capabilities
-
-## Getting Started
+### Download Latest Release
 
 ```bash
-# Create a new virtual environment
-python -m venv venv
+# Download for your platform
+# Windows (run from Command Prompt)
+curl -L -o pano-capture-latest-windows.exe "https://github.com/Respawwwn/game-pano-capture/releases/latest/download/pano-capture-latest-windows.exe"
+ren pano-capture-latest-windows.exe pano-capture.exe
 
-# Activate the virtual environment
-source venv/bin/activate  # On macOS/Linux
-venv\Scripts\activate     # On Windows
+# macOS (run from Terminal)
+curl -L -o pano-capture-latest-macos "https://github.com/Respawwwn/game-pano-capture/releases/latest/download/pano-capture-latest-macos"
+mv pano-capture-latest-macos pano-capture
+
+# Linux (run from Terminal)
+curl -L -o pano-capture-latest-linux "https://github.com/Respawwwn/game-pano-capture/releases/latest/download/pano-capture-latest-linux"
+mv pano-capture-latest-linux pano-capture
 ```
+
+### Setup and Run
 
 ```bash
-# Install required packages.
-pip install -r requirements.txt
+# Make executable (Linux/macOS only)
+chmod +x pano-capture
+
+# Setup a game
+./pano-capture --setup "Cyberpunk 2077"
+
+# Capture panorama
+./pano-capture --capture "Cyberpunk 2077"
 ```
+
+Test your settings before full capture:
 
 ```bash
-# Setup a game.
-python pano_capture.py --setup "Cyberpunk 2077"
-# Capture a panorama.
-python pano_capture.py --capture "Cyberpunk 2077"
+# Test horizontal rotation (360° test)
+./pano-capture --test-horizontal "Cyberpunk 2077"
+
+# Test vertical movement (nadir to zenith)  
+./pano-capture --test-vertical "Cyberpunk 2077"
+
+# Test screenshot keybind
+./pano-capture --test-screenshot "Cyberpunk 2077"
 ```
-
-Before doing a full capture, test your settings:
-
-```bash
-# Test horizontal rotation (360° test).
-python pano_capture.py --test-horizontal "Cyberpunk 2077"
-
-# Test vertical movement (nadir to zenith).
-python pano_capture.py --test-vertical "Cyberpunk 2077"
-
-# Test screenshot keybind.
-python pano_capture.py --test-screenshot "Cyberpunk 2077"
-```
-
-## Install Python
-
-If you don't have Python installed:
-
-```bash
-# Using package manager on various systems
-# Windows: Download from python.org
-# macOS: 
-brew install python
-# Linux (Ubuntu/Debian):
-sudo apt install python python-pip
-```
-
-Verify the installation:
-```bash
-python --version
-```
-
-## Usage
 
 ### 1. Initial Setup for a New Game
 
 Configure a new game with its specific settings:
 
 ```bash
-python pano_capture.py --setup "Cyberpunk 2077"
+# Using executable
+./pano-capture --setup "Cyberpunk 2077"
 ```
 
 You'll be prompted to configure:
@@ -100,25 +84,21 @@ You'll be prompted to configure:
 Before doing a full capture, test your settings:
 
 ```bash
-# Test horizontal rotation (360° test)
-python pano_capture.py --test-horizontal "Cyberpunk 2077"
-
-# Test vertical movement (nadir to zenith)
-python pano_capture.py --test-vertical "Cyberpunk 2077"
-
-# Test screenshot keybind
-python pano_capture.py --test-screenshot "Cyberpunk 2077"
+# Using executable
+./pano-capture --test-horizontal "Cyberpunk 2077"
+./pano-capture --test-vertical "Cyberpunk 2077"
+./pano-capture --test-screenshot "Cyberpunk 2077"
 ```
 
 These tests will verify camera movement works correctly before doing a full capture.
 
-### 3. Capture a Panorama
+### 4. Capture a Panorama
 
 Once configured and tested:
 
 ```bash
-# Start automated capture
-python pano_capture.py --capture "Cyberpunk 2077"
+# Using executable
+./pano-capture --capture "Cyberpunk 2077"
 ```
 
 ### 4. **Create Panorama**
@@ -315,24 +295,25 @@ The script supports various key formats:
 
 ## Command Reference
 
+### Using Executable
 ```bash
 # Setup new game configuration
-python pano_capture.py --setup "Game Name"
+./pano-capture --setup "Game Name"
 
 # Capture panorama for configured game
-python pano_capture.py --capture "Game Name"
+./pano-capture --capture "Game Name"
 
 # Test horizontal rotation (360° test)
-python pano_capture.py --test-horizontal "Game Name"
+./pano-capture --test-horizontal "Game Name"
 
 # Test vertical movement (nadir to zenith)
-python pano_capture.py --test-vertical "Game Name"
+./pano-capture --test-vertical "Game Name"
 
 # Test screenshot keybind
-python pano_capture.py --test-screenshot "Game Name"
+./pano-capture --test-screenshot "Game Name"
 
 # List all configured games
-python pano_capture.py --list
+./pano-capture --list
 ```
 
 ## Tips for Best Results
@@ -376,13 +357,13 @@ Virtual gamepad functionality is Windows-only. On other platforms, use keyboard 
    - Switch from fullscreen to windowed or borderless windowed mode
    - This allows external applications to send keyboard input
 
-2. **Run Python script with elevated privileges**
+2. **Run with elevated privileges**
    ```bash
    # Windows (run Command Prompt as Administrator)
-   python pano_capture.py --test-screenshot "Your Game"
+   ./pano-capture --test-screenshot "Your Game"
    
    # Linux/macOS
-   sudo python pano_capture.py --test-screenshot "Your Game"
+   sudo ./pano-capture --test-screenshot "Your Game"
    ```
 3. **Use the in-game Screenshot capabilities**
    - Instead of using an external Screenshot tools, configure the script to use the game's built-in screenshot function
